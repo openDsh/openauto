@@ -63,7 +63,6 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR}
                     ${Qt5Bluetooth_INCLUDE_DIRS}
                     ${Qt5Network_INCLUDE_DIRS}
                     ${Boost_INCLUDE_DIRS}
-                    ${LIBUSB_1_INCLUDE_DIRS}
                     ${PROTOBUF_INCLUDE_DIR}
                     ${OPENSSL_INCLUDE_DIR}
                     ${RTAUDIO_INCLUDE_DIRS}
@@ -83,13 +82,12 @@ file(GLOB_RECURSE autoapp_source_files ${autoapp_sources_directory}/*.ui ${autoa
 
 add_executable(autoapp ${autoapp_source_files})
 
-target_link_libraries(autoapp aasdk 
+target_link_libraries(autoapp aasdk libusb
                         ${Boost_LIBRARIES}
                         ${Qt5Multimedia_LIBRARIES}
                         ${Qt5MultimediaWidgets_LIBRARIES}
                         ${Qt5Bluetooth_LIBRARIES}
                         ${Qt5Network_LIBRARIES}
-                        ${LIBUSB_1_LIBRARIES}
                         ${PROTOBUF_LIBRARIES}
                         ${ZLIB_LIBRARIES}
                         ${BCM_HOST_LIBRARIES}
