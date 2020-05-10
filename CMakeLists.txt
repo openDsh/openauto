@@ -35,6 +35,7 @@ find_package(OpenSSL REQUIRED)
 find_package(rtaudio REQUIRED)
 find_package(taglib REQUIRED)
 find_package(blkid REQUIRED)
+find_package(aasdk REQUIRED)
 
 if(WIN32)
     set(WINSOCK2_LIBRARIES "ws2_32")
@@ -61,8 +62,6 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR}
                     ${RTAUDIO_INCLUDE_DIRS}
                     ${TAGLIB_INCLUDE_DIRS}
                     ${BLKID_INCLUDE_DIRS}
-                    ${AASDK_PROTO_INCLUDE_DIRS}
-                    ${AASDK_INCLUDE_DIRS}
                     ${BCM_HOST_INCLUDE_DIRS}
                     ${ILCLIENT_INCLUDE_DIRS}
                     ${include_directory})
@@ -77,7 +76,7 @@ file(GLOB_RECURSE autoapp_source_files ${autoapp_sources_directory}/*.ui ${autoa
 
 add_executable(autoapp ${autoapp_source_files})
 
-target_link_libraries(autoapp
+target_link_libraries(autoapp aasdk 
                         ${Boost_LIBRARIES}
                         ${Qt5Multimedia_LIBRARIES}
                         ${Qt5MultimediaWidgets_LIBRARIES}
@@ -91,8 +90,7 @@ target_link_libraries(autoapp
                         ${RTAUDIO_LIBRARIES}
                         ${TAGLIB_LIBRARIES}
                         ${BLKID_LIBRARIES}
-                        ${AASDK_PROTO_LIBRARIES}
-                        ${AASDK_LIBRARIES})
+			)
 
 set(btservice_sources_directory ${sources_directory}/btservice)
 set(btservice_include_directory ${include_directory}/f1x/openauto/btservice)
@@ -106,4 +104,4 @@ target_link_libraries(btservice
                         ${Qt5Network_LIBRARIES}
                         ${Qt5MultimediaWidgets_LIBRARIES}
                         ${PROTOBUF_LIBRARIES}
-                        ${AASDK_PROTO_LIBRARIES})
+)
