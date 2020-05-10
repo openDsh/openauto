@@ -36,6 +36,7 @@ find_package(rtaudio REQUIRED)
 find_package(taglib REQUIRED)
 find_package(blkid REQUIRED)
 find_package(aasdk REQUIRED)
+find_package(ZLIB REQUIRED)
 
 if(WIN32)
     set(WINSOCK2_LIBRARIES "ws2_32")
@@ -84,6 +85,7 @@ target_link_libraries(autoapp aasdk
                         ${Qt5Network_LIBRARIES}
                         ${LIBUSB_1_LIBRARIES}
                         ${PROTOBUF_LIBRARIES}
+                        ${ZLIB_LIBRARIES}
                         ${BCM_HOST_LIBRARIES}
                         ${ILCLIENT_LIBRARIES}
                         ${WINSOCK2_LIBRARIES}
