@@ -101,5 +101,8 @@ target_link_libraries(btservice
                         ${PROTOBUF_LIBRARIES}
 )
 
+set_target_properties(autoapp
+                        PROPERTIES INSTALL_RPATH_USE_LINK_PATH 1)
+
 install(TARGETS autoapp btservice
 	RUNTIME DESTINATION bin)
