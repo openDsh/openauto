@@ -68,6 +68,10 @@ public:
     AudioOutputBackendType getAudioOutputBackendType() const override;
     void setAudioOutputBackendType(AudioOutputBackendType value) override;
 
+    std::string getWifiSSID() override;
+    std::string getWifiPassword() override;
+
+
 private:
     void readButtonCodes(boost::property_tree::ptree& iniConfig);
     void insertButtonCode(boost::property_tree::ptree& iniConfig, const std::string& buttonCodeKey, aasdk::proto::enums::ButtonCode::Enum buttonCode);
@@ -87,6 +91,8 @@ private:
     bool musicAudioChannelEnabled_;
     bool speechAudiochannelEnabled_;
     AudioOutputBackendType audioOutputBackendType_;
+    std::string ssid;
+    std::string pskey;
 
     static const std::string cConfigFileName;
 
@@ -124,6 +130,9 @@ private:
     static const std::string cInputScrollWheelButtonKey;
     static const std::string cInputBackButtonKey;
     static const std::string cInputEnterButtonKey;
+
+    static const std::string cWifiSSID;
+    static const std::string cWifiPskey;
 };
 
 }

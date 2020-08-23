@@ -59,6 +59,7 @@ ServiceFactory::ServiceFactory(boost::asio::io_service& ioService, configuration
 #else
     , qtVideoOutput_(nullptr)
 #endif
+    , btservice_(configuration_)
     , nightMode_(nightMode)
 {
 

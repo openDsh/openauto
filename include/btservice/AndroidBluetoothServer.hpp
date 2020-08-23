@@ -9,6 +9,7 @@
 #include <btservice_proto/NetworkInfo.pb.h>
 #include <btservice_proto/PhoneResponse.pb.h>
 #include <btservice_proto/SocketInfo.pb.h>
+#include "openauto/Configuration/Configuration.hpp"
 #include "IAndroidBluetoothServer.hpp"
 
 namespace openauto
@@ -21,7 +22,7 @@ class AndroidBluetoothServer: public QObject, public IAndroidBluetoothServer
     Q_OBJECT
 
 public:
-    AndroidBluetoothServer();
+    AndroidBluetoothServer(openauto::configuration::IConfiguration::Pointer config_);
 
     bool start(const QBluetoothAddress& address, uint16_t portNumber) override;
 
@@ -51,6 +52,8 @@ private:
     };
  
     CONNECTION_STATUS handshakeState = IDLE;
+protected:
+    openauto::configuration::IConfiguration::Pointer config;
 };
 
 }

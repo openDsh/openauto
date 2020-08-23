@@ -1,64 +1,36 @@
-/*
-*  This file is part of openauto project.
-*  Copyright (C) 2018 f1x.studio (Michal Szwaj)
-*
-*  openauto is free software: you can redistribute it and/or modify
-*  it under the terms of the GNU General Public License as published by
-*  the Free Software Foundation; either version 3 of the License, or
-*  (at your option) any later version.
-
-*  openauto is distributed in the hope that it will be useful,
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-*  GNU General Public License for more details.
-*
-*  You should have received a copy of the GNU General Public License
-*  along with openauto. If not, see <http://www.gnu.org/licenses/>.
-*/
-
-#include <QApplication>
-#include "OpenautoLog.hpp"
-#include "btservice/AndroidBluetoothService.hpp"
-#include "btservice/AndroidBluetoothServer.hpp"
-
-namespace btservice = openauto::btservice;
-
-int main(int argc, char* argv[])
-{
+#include "btservice/btservice.hpp"
+namespace openauto{
+namespace btservice{
+btservice::btservice(openauto::configuration::IConfiguration::Pointer config) : androidBluetoothService(servicePortNumber), androidBluetoothServer(config){
     QBluetoothAddress address;
-    QApplication qApplication(argc, argv);
     auto adapters = QBluetoothLocalDevice::allDevices();
     if (adapters.size() > 0)
         address =adapters.at(0).address();
+    else{
+        OPENAUTO_LOG(error) << "[btservice] No adapter found";
+    }
 
-    OPENAUTO_LOG(error) << "[btservice] No adapter found";
 
 
-    const uint16_t portNumber = 22;
-
-    btservice::AndroidBluetoothServer androidBluetoothServer;
-    if(!androidBluetoothServer.start(address, portNumber))
+    if(!androidBluetoothServer.start(address, servicePortNumber))
     {
         OPENAUTO_LOG(error) << "[btservice] Server start failed.";
-        return 2;
+        return;
     }
 
     OPENAUTO_LOG(info) << "[btservice] Listening for connections, address: " << address.toString().toStdString()
-                       << ", port: " << portNumber;
+                       << ", port: " << servicePortNumber;
 
-    btservice::AndroidBluetoothService androidBluetoothService(portNumber);
+    
     if(!androidBluetoothService.registerService(address))
     {
         OPENAUTO_LOG(error) << "[btservice] Service registration failed.";
-        return 1;
     }
     else
     {
-        OPENAUTO_LOG(info) << "[btservice] Service registered, port: " << portNumber;
+        OPENAUTO_LOG(info) << "[btservice] Service registered, port: " << servicePortNumber;
     }
+}
 
-    qApplication.exec();
-    androidBluetoothService.unregisterService();
-
-    return 0;
+}
 }

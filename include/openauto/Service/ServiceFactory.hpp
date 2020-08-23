@@ -25,6 +25,7 @@
 #include "openauto/Projection/GSTVideoOutput.hpp"
 #include "openauto/Projection/QtVideoOutput.hpp"
 #include "openauto/Service/SensorService.hpp"
+#include "btservice/btservice.hpp"
 
 namespace openauto
 {
@@ -64,6 +65,7 @@ private:
 #else
     projection::QtVideoOutput *qtVideoOutput_;
 #endif
+    btservice::btservice btservice_;
     bool nightMode_;
     std::weak_ptr<SensorService> sensorService_;
 };

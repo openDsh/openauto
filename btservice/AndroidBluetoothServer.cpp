@@ -8,9 +8,11 @@ namespace openauto
 namespace btservice
 {
 
-AndroidBluetoothServer::AndroidBluetoothServer()
+AndroidBluetoothServer::AndroidBluetoothServer(openauto::configuration::IConfiguration::Pointer config_)
     : rfcommServer_(std::make_unique<QBluetoothServer>(QBluetoothServiceInfo::RfcommProtocol, this))
+    , config(std::move(config_))
 {
+    handshakeState = IDLE;
     connect(rfcommServer_.get(), &QBluetoothServer::newConnection, this, &AndroidBluetoothServer::onClientConnected);
     QThread *thread = QThread::create([&]{ this->stateMachine(); });
     thread->start();
@@ -122,8 +124,8 @@ void AndroidBluetoothServer::writeNetworkInfoMessage(){
     OPENAUTO_LOG(info) << "[AndroidBluetoothServer] Sending Network Packet";
 
     btservice::proto::NetworkInfo networkMessage;
-    networkMessage.set_ssid("NETGEAR77-5G");
-    networkMessage.set_psk("largewindow122");
+    networkMessage.set_ssid(config->getWifiSSID());
+    networkMessage.set_psk(config->getWifiPassword());
 
     foreach(QNetworkInterface netInterface, QNetworkInterface::allInterfaces())
     {

@@ -1,5 +1,12 @@
 add_library(openauto SHARED
         App.cpp
+        ../btservice/AndroidBluetoothServer.cpp
+        ../btservice/AndroidBluetoothService.cpp
+        ../btservice/btservice.cpp
+        ${CMAKE_SOURCE_DIR}/include/btservice/AndroidBluetoothServer.hpp
+        ${CMAKE_SOURCE_DIR}/include/btservice/AndroidBluetoothService.hpp
+        ${CMAKE_SOURCE_DIR}/include/btservice/IAndroidBluetoothServer.hpp
+        ${CMAKE_SOURCE_DIR}/include/btservice/IAndroidBluetoothService.hpp
         Service/BluetoothService.cpp
         Service/InputService.cpp
         Service/MediaAudioService.cpp
@@ -95,6 +102,7 @@ endif()
 target_include_directories(openauto PRIVATE
         ${CMAKE_SOURCE_DIR}/include
         ${RTAUDIO_INCLUDE_DIRS}
+        ${Protobuf_INCLUDE_DIRS}
         )
 
 target_link_libraries(openauto PUBLIC
@@ -105,6 +113,8 @@ target_link_libraries(openauto PUBLIC
         rtaudio
         Qt5::Bluetooth
         Qt5::MultimediaWidgets
+        btservice_proto
+        ${Protobuf_LIBRARIES}
         )
 
 install(TARGETS openauto

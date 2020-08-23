@@ -75,7 +75,5 @@ include_directories(${BTSERVICE_PROTO_INCLUDE_DIRS})
 
 
 add_subdirectory(openauto)
-add_subdirectory(btservice)
 add_subdirectory(autoapp)
-add_dependencies(btservice btservice_proto)
-
+add_dependencies(autoapp btservice_proto)
