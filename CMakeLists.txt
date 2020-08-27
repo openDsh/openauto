@@ -73,7 +73,6 @@ add_subdirectory(btservice_proto)
 set(BTSERVICE_PROTO_INCLUDE_DIRS ${CMAKE_CURRENT_BINARY_DIR})
 include_directories(${BTSERVICE_PROTO_INCLUDE_DIRS})
 
-
 add_subdirectory(openauto)
 add_subdirectory(autoapp)
 add_dependencies(autoapp btservice_proto)

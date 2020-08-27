@@ -1,8 +1,9 @@
 syntax = "proto2";
+
 package openauto.btservice.proto;
 
-
-message SocketInfo{
+message SocketInfo
+{
     required string address = 1;
     required int32 port = 2;
     required int32 unknown_1 = 3;

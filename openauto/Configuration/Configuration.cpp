@@ -102,8 +102,9 @@ void Configuration::load()
         musicAudioChannelEnabled_ = iniConfig.get<bool>(cAudioMusicAudioChannelEnabled, true);
         speechAudiochannelEnabled_ = iniConfig.get<bool>(cAudioSpeechAudioChannelEnabled, true);
         audioOutputBackendType_ = static_cast<AudioOutputBackendType>(iniConfig.get<uint32_t>(cAudioOutputBackendType, static_cast<uint32_t>(AudioOutputBackendType::RTAUDIO)));
-        ssid = iniConfig.get<std::string>(cWifiSSID, "");
-        pskey = iniConfig.get<std::string>(cWifiPskey, "");
+
+        wifiSSID_ = iniConfig.get<std::string>(cWifiSSID, "");
+        wifiPassword_ = iniConfig.get<std::string>(cWifiPskey, "");
     }
     catch(const boost::property_tree::ini_parser_error& e)
     {
@@ -154,10 +155,10 @@ void Configuration::save()
     iniConfig.put<bool>(cAudioMusicAudioChannelEnabled, musicAudioChannelEnabled_);
     iniConfig.put<bool>(cAudioSpeechAudioChannelEnabled, speechAudiochannelEnabled_);
     iniConfig.put<uint32_t>(cAudioOutputBackendType, static_cast<uint32_t>(audioOutputBackendType_));
-    iniConfig.put<std::string>(cWifiSSID, ssid);
-    iniConfig.put<std::string>(cWifiPskey, pskey);
-    boost::property_tree::ini_parser::write_ini(cConfigFileName, iniConfig);
 
+    iniConfig.put<std::string>(cWifiSSID, wifiSSID_);
+    iniConfig.put<std::string>(cWifiPskey, wifiPassword_);
+    boost::property_tree::ini_parser::write_ini(cConfigFileName, iniConfig);
 }
 
 void Configuration::setHandednessOfTrafficType(HandednessOfTrafficType value)
@@ -302,14 +303,23 @@ void Configuration::setAudioOutputBackendType(AudioOutputBackendType value)
 
 std::string Configuration::getWifiSSID()
 {
-    return ssid;
+    return wifiSSID_;
+}
+
+void Configuration::getWifiSSID(std::string value)
+{
+    wifiSSID_ = value;
 }
 
 std::string Configuration::getWifiPassword()
 {
-    return pskey;
+    return wifiPassword_;
 }
 
+void Configuration::getWifiPassword(std::string value)
+{
+    wifiPassword_ = value;
+}
 
 void Configuration::readButtonCodes(boost::property_tree::ptree& iniConfig)
 {

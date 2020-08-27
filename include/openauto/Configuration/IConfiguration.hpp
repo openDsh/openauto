@@ -44,9 +44,6 @@ public:
     virtual void reset() = 0;
     virtual void save() = 0;
 
-    virtual std::string getWifiSSID() = 0;
-    virtual std::string getWifiPassword() = 0;
-
     virtual void setHandednessOfTrafficType(HandednessOfTrafficType value) = 0;
     virtual HandednessOfTrafficType getHandednessOfTrafficType() const = 0;
     virtual void showClock(bool value) = 0;
@@ -79,6 +76,11 @@ public:
     virtual void setSpeechAudioChannelEnabled(bool value) = 0;
     virtual AudioOutputBackendType getAudioOutputBackendType() const = 0;
     virtual void setAudioOutputBackendType(AudioOutputBackendType value) = 0;
+
+    virtual std::string getWifiSSID() = 0;
+    virtual void getWifiSSID(std::string value) = 0;
+    virtual std::string getWifiPassword() = 0;
+    virtual void getWifiPassword(std::string value) = 0;
 };
 
 }

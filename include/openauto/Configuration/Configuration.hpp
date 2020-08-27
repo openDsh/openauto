@@ -69,8 +69,9 @@ public:
     void setAudioOutputBackendType(AudioOutputBackendType value) override;
 
     std::string getWifiSSID() override;
+    void getWifiSSID(std::string value) override;
     std::string getWifiPassword() override;
-
+    void getWifiPassword(std::string value) override;
 
 private:
     void readButtonCodes(boost::property_tree::ptree& iniConfig);
@@ -91,8 +92,8 @@ private:
     bool musicAudioChannelEnabled_;
     bool speechAudiochannelEnabled_;
     AudioOutputBackendType audioOutputBackendType_;
-    std::string ssid;
-    std::string pskey;
+    std::string wifiSSID_;
+    std::string wifiPassword_;
 
     static const std::string cConfigFileName;
 

@@ -1,7 +1,8 @@
 syntax = "proto3";
+
 package openauto.btservice.proto;
 
-
-message PhoneResponse{
+message PhoneResponse
+{
     int32 status_code = 1;
 }

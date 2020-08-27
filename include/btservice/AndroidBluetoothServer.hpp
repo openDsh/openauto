@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <atomic>
 #include <memory>
 #include <sstream>
 #include <QBluetoothServer>
@@ -17,13 +18,25 @@ namespace openauto
 namespace btservice
 {
 
+enum class ConnectionStatus
+{
+    IDLE,
+    DEVICE_CONNECTED,
+    SENDING_SOCKETINFO_MESSAGE,
+    SENT_SOCKETINFO_MESSAGE,
+    PHONE_RESP_SOCKETINFO,
+    SENDING_NETWORKINFO_MESSAGE,
+    SENT_NETWORKINFO_MESSAGE,
+    PHONE_RESP_NETWORKINFO,
+    ERROR
+};
+
 class AndroidBluetoothServer: public QObject, public IAndroidBluetoothServer
 {
     Q_OBJECT
 
 public:
-    AndroidBluetoothServer(openauto::configuration::IConfiguration::Pointer config_);
-
+    AndroidBluetoothServer(openauto::configuration::IConfiguration::Pointer config);
     bool start(const QBluetoothAddress& address, uint16_t portNumber) override;
 
 private slots:
@@ -32,28 +45,15 @@ private slots:
 
 private:
     std::unique_ptr<QBluetoothServer> rfcommServer_;
-    QBluetoothSocket* socket;
+    QBluetoothSocket* socket_;
+    openauto::configuration::IConfiguration::Pointer config_;
+    std::atomic<ConnectionStatus> handshakeState_;
 
     void writeSocketInfoMessage();
     void writeNetworkInfoMessage();
-    void stateMachine();
-    bool writeProtoMessage(uint16_t messageType, google::protobuf::Message &message);
+    void eventLoop();
+    bool writeProtoMessage(uint16_t messageType, google::protobuf::Message& message);
 
-    enum CONNECTION_STATUS {
-        IDLE,
-        DEVICE_CONNECTED,
-        SENDING_SOCKETINFO_MESSAGE,
-        SENT_SOCKETINFO_MESSAGE,
-        PHONE_RESP_SOCKETINFO,
-        SENDING_NETWORKINFO_MESSAGE,
-        SENT_NETWORKINFO_MESSAGE,
-        PHONE_RESP_NETWORKINFO,
-        ERROR
-    };
- 
-    CONNECTION_STATUS handshakeState = IDLE;
-protected:
-    openauto::configuration::IConfiguration::Pointer config;
 };
 
 }

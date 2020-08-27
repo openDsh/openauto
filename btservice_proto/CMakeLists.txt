@@ -9,5 +9,5 @@ target_link_libraries(btservice_proto ${PROTOBUF_LIBRARIES})
 
 install(TARGETS btservice_proto DESTINATION lib)
 install(DIRECTORY . DESTINATION include/btservice_proto
-    FILES_MATCHING PATTERN *.h
-    PATTERN CMakeFiles EXCLUDE )
+        FILES_MATCHING PATTERN *.h
+        PATTERN CMakeFiles EXCLUDE)
