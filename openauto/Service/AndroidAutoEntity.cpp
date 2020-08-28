@@ -223,7 +223,7 @@ void AndroidAutoEntity::onNavigationFocusRequest(const aasdk::proto::messages::N
     controlServiceChannel_->receive(this->shared_from_this());
 }
 
-void AndroidAutoEntity::onVoiceSessionRequest(const aasdk::proto::messages::VoiceSessionRequest& request)
+/* void AndroidAutoEntity::onVoiceSessionRequest(const aasdk::proto::messages::VoiceSessionRequest& request)
 {
 
     OPENAUTO_LOG(info) << "[AndroidAutoEntity] Voice session request, type: " << (request.type()==1)?("START"):((request.type()==2)?("STOP"):("UNKNOWN"));
@@ -243,7 +243,7 @@ void AndroidAutoEntity::onPingRequest(const aasdk::proto::messages::PingRequest&
     promise->then([]() {}, std::bind(&AndroidAutoEntity::onChannelError, this->shared_from_this(), std::placeholders::_1));
     controlServiceChannel_->sendPingResponse(response, std::move(promise));
     controlServiceChannel_->receive(this->shared_from_this());
-}
+} */ // TODO handling ping and voice session
 
 void AndroidAutoEntity::onPingResponse(const aasdk::proto::messages::PingResponse&)
 {
