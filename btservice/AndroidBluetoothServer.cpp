@@ -16,7 +16,7 @@ AndroidBluetoothServer::AndroidBluetoothServer(openauto::configuration::IConfigu
 {
     connect(rfcommServer_.get(), &QBluetoothServer::newConnection, this, &AndroidBluetoothServer::onClientConnected);
 
-    QThread *thread = QThread::create([&]{ this->eventLoop(); });
+    auto* thread = QThread::create([&]{ this->eventLoop(); });
     thread->start();
 }
 
@@ -38,7 +38,7 @@ void AndroidBluetoothServer::eventLoop()
             break;
 
         case ConnectionStatus::SENDING_SOCKETINFO_MESSAGE:
-            writeSocketInfoMessage();
+            this->writeSocketInfoMessage();
             break;
 
         case ConnectionStatus::PHONE_RESP_SOCKETINFO:
@@ -46,7 +46,7 @@ void AndroidBluetoothServer::eventLoop()
             break;
 
         case ConnectionStatus::SENDING_NETWORKINFO_MESSAGE:
-            writeNetworkInfoMessage();
+            this->writeNetworkInfoMessage();
             break;
         }
     }
@@ -75,8 +75,8 @@ void AndroidBluetoothServer::onClientConnected()
 
 bool AndroidBluetoothServer::writeProtoMessage(uint16_t messageType, google::protobuf::Message& message)
 {
-    QByteArray byteArray(message.SerializeAsString().c_str(), message.ByteSizeLong());
-    uint16_t messageLength = message.ByteSizeLong();
+    QByteArray byteArray(message.SerializeAsString().c_str(), message.ByteSize());
+    uint16_t messageLength = message.ByteSize();
     byteArray.prepend(messageType & 0x000000ff);
     byteArray.prepend((messageType & 0x0000ff00) >> 8);
     byteArray.prepend(messageLength & 0x000000ff);
@@ -97,7 +97,7 @@ void AndroidBluetoothServer::writeSocketInfoMessage()
     QString ipAddr;
     foreach(QHostAddress addr, QNetworkInterface::allAddresses())
     {
-        if(addr.isLoopback() && addr.protocol() == QAbstractSocket::IPv4Protocol)
+        if(!addr.isLoopback() && (addr.protocol() == QAbstractSocket::IPv4Protocol))
         {
             ipAddr = addr.toString();
         }
@@ -108,7 +108,7 @@ void AndroidBluetoothServer::writeSocketInfoMessage()
     socketInfo.set_port(5000);
     socketInfo.set_unknown_1(0);
 
-    if(writeProtoMessage(7, socketInfo))
+    if(this->writeProtoMessage(7, socketInfo))
     {
         OPENAUTO_LOG(info) << "[AndroidBluetoothServer] Sent socket info.";
         handshakeState_ = ConnectionStatus::SENT_SOCKETINFO_MESSAGE;
@@ -138,7 +138,7 @@ void AndroidBluetoothServer::writeNetworkInfoMessage()
     networkMessage.set_security_mode(8);
     networkMessage.set_unknown_2(0);
 
-    if(writeProtoMessage(3, networkMessage))
+    if(this->writeProtoMessage(3, networkMessage))
     {
         OPENAUTO_LOG(info) << "[AndroidBluetoothServer] Sent network packet.";
         handshakeState_ = ConnectionStatus::SENT_NETWORKINFO_MESSAGE;
@@ -153,12 +153,12 @@ void AndroidBluetoothServer::writeNetworkInfoMessage()
 void AndroidBluetoothServer::readSocket()
 {
     OPENAUTO_LOG(info) << "[AndroidBluetoothServer] DATA: ";
-    if (!socket_)
+    if(!socket_)
     {
         return;
     }
 
-    QByteArray data = socket_->read(1024);
+    auto data = socket_->read(1024);
     if(data.length() == 0)
     {
         return;
