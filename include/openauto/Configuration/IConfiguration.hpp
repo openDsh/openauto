@@ -78,9 +78,9 @@ public:
     virtual void setAudioOutputBackendType(AudioOutputBackendType value) = 0;
 
     virtual std::string getWifiSSID() = 0;
-    virtual void getWifiSSID(std::string value) = 0;
+    virtual void setWifiSSID(std::string value) = 0;
     virtual std::string getWifiPassword() = 0;
-    virtual void getWifiPassword(std::string value) = 0;
+    virtual void setWifiPassword(std::string value) = 0;
 };
 
 }

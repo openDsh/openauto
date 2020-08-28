@@ -306,7 +306,7 @@ std::string Configuration::getWifiSSID()
     return wifiSSID_;
 }
 
-void Configuration::getWifiSSID(std::string value)
+void Configuration::setWifiSSID(std::string value)
 {
     wifiSSID_ = value;
 }
@@ -316,7 +316,7 @@ std::string Configuration::getWifiPassword()
     return wifiPassword_;
 }
 
-void Configuration::getWifiPassword(std::string value)
+void Configuration::setWifiPassword(std::string value)
 {
     wifiPassword_ = value;
 }

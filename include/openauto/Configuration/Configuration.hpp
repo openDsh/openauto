@@ -69,9 +69,9 @@ public:
     void setAudioOutputBackendType(AudioOutputBackendType value) override;
 
     std::string getWifiSSID() override;
-    void getWifiSSID(std::string value) override;
+    void setWifiSSID(std::string value) override;
     std::string getWifiPassword() override;
-    void getWifiPassword(std::string value) override;
+    void setWifiPassword(std::string value) override;
 
 private:
     void readButtonCodes(boost::property_tree::ptree& iniConfig);
