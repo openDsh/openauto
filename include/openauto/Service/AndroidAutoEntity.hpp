@@ -54,10 +54,10 @@ public:
     void onShutdownRequest(const aasdk::proto::messages::ShutdownRequest& request) override;
     void onShutdownResponse(const aasdk::proto::messages::ShutdownResponse& response) override;
     void onNavigationFocusRequest(const aasdk::proto::messages::NavigationFocusRequest& request) override;
-    // void onPingRequest(const aasdk::proto::messages::PingRequest& request) override; // TODO handling ping and voice session
+    void onPingRequest(const aasdk::proto::messages::PingRequest& request) override;
     void onPingResponse(const aasdk::proto::messages::PingResponse& response) override;
     void onChannelError(const aasdk::error::Error& e) override;
-    // void onVoiceSessionRequest(const aasdk::proto::messages::VoiceSessionRequest& request) override; // TODO handling ping and voice session
+    void onVoiceSessionRequest(const aasdk::proto::messages::VoiceSessionRequest& request) override;
 
 private:
     using std::enable_shared_from_this<AndroidAutoEntity>::shared_from_this;
