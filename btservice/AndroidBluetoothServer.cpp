@@ -104,9 +104,9 @@ void AndroidBluetoothServer::writeSocketInfoMessage()
     }
 
     btservice::proto::SocketInfo socketInfo;
-    socketInfo.set_address(ipAddr.toStdString());
+    socketInfo.set_ip_address(ipAddr.toStdString());
     socketInfo.set_port(5000);
-    socketInfo.set_unknown_1(0);
+    socketInfo.set_status(btservice::proto::Status::STATUS_SUCCESS);
 
     if(this->writeProtoMessage(7, socketInfo))
     {
@@ -135,8 +135,8 @@ void AndroidBluetoothServer::writeNetworkInfoMessage()
             networkMessage.set_mac_addr(netInterface.hardwareAddress().toStdString());
         }
     }
-    networkMessage.set_security_mode(8);
-    networkMessage.set_unknown_2(0);
+    networkMessage.set_security_mode(btservice::proto::SecurityMode::WPA2_PERSONAL);
+    networkMessage.set_ap_type(btservice::proto::AccessPointType::STATIC);
 
     if(this->writeProtoMessage(3, networkMessage))
     {
@@ -166,6 +166,7 @@ void AndroidBluetoothServer::readSocket()
 
     uint16_t messageType = (data[2] << 8) | data[3];
     btservice::proto::PhoneResponse resp;
+    OPENAUTO_LOG(info) << "TYPE: " << messageType;
     switch(messageType)
     {
     case 2:

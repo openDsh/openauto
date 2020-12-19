@@ -2,11 +2,29 @@ syntax = "proto2";
 
 package openauto.btservice.proto;
 
+enum SecurityMode {
+    UNKNOWN_SECURITY_MODE = 0;
+    OPEN = 1;
+    WEP_64 = 2;
+    WEP_128 = 3;
+    WPA_PERSONAL = 4;
+    WPA2_PERSONAL = 8;
+    WPA_WPA2_PERSONAL = 12;
+    WPA_ENTERPRISE = 20;
+    WPA2_ENTERPRISE = 24;
+    WPA_WPA2_ENTERPRISE = 28;
+}
+
+enum AccessPointType {
+    STATIC = 0;
+    DYNAMIC = 1;
+}
+
 message NetworkInfo
 {
     required string ssid = 1;
     required string psk = 2;
     required string mac_addr = 3;
-    required int32 security_mode = 4;
-    required int32 unknown_2 = 5;
+    required SecurityMode security_mode = 4;
+    required AccessPointType ap_type = 5;
 }
