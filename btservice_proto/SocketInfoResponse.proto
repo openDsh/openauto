@@ -17,9 +17,9 @@ enum Status {
     STATUS_PHONE_WIFI_DISABLED = -10;
 }
 
-message SocketInfo
+message SocketInfoResponse
 {
-    required string ip_address = 1;
-    required int32 port = 2;
+    optional string ip_address = 1;
+    optional int32 port = 2;
     required Status status = 3;
 }

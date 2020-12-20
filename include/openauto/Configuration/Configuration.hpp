@@ -72,6 +72,8 @@ public:
     void setWifiSSID(std::string value) override;
     std::string getWifiPassword() override;
     void setWifiPassword(std::string value) override;
+    std::string getWifiMAC() override;
+    void setWifiMAC(std::string value) override;
 
 private:
     void readButtonCodes(boost::property_tree::ptree& iniConfig);
@@ -94,6 +96,7 @@ private:
     AudioOutputBackendType audioOutputBackendType_;
     std::string wifiSSID_;
     std::string wifiPassword_;
+    std::string wifiMAC_;
 
     static const std::string cConfigFileName;
 
@@ -134,6 +137,7 @@ private:
 
     static const std::string cWifiSSID;
     static const std::string cWifiPskey;
+    static const std::string cWifiMAC;
 };
 
 }

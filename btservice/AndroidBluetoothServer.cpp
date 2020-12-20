@@ -15,41 +15,6 @@ AndroidBluetoothServer::AndroidBluetoothServer(openauto::configuration::IConfigu
     , handshakeState_(ConnectionStatus::IDLE)
 {
     connect(rfcommServer_.get(), &QBluetoothServer::newConnection, this, &AndroidBluetoothServer::onClientConnected);
-
-    auto* thread = QThread::create([&]{ this->eventLoop(); });
-    thread->start();
-}
-
-void AndroidBluetoothServer::eventLoop()
-{
-    while(true)
-    {
-        switch(handshakeState_)
-        {
-        case ConnectionStatus::IDLE:
-        case ConnectionStatus::SENT_SOCKETINFO_MESSAGE:
-        case ConnectionStatus::SENT_NETWORKINFO_MESSAGE:
-        case ConnectionStatus::PHONE_RESP_NETWORKINFO:
-        case ConnectionStatus::ERROR:
-            break;
-
-        case ConnectionStatus::DEVICE_CONNECTED:
-            handshakeState_ = ConnectionStatus::SENDING_SOCKETINFO_MESSAGE;
-            break;
-
-        case ConnectionStatus::SENDING_SOCKETINFO_MESSAGE:
-            this->writeSocketInfoMessage();
-            break;
-
-        case ConnectionStatus::PHONE_RESP_SOCKETINFO:
-            handshakeState_ = ConnectionStatus::SENDING_NETWORKINFO_MESSAGE;
-            break;
-
-        case ConnectionStatus::SENDING_NETWORKINFO_MESSAGE:
-            this->writeNetworkInfoMessage();
-            break;
-        }
-    }
 }
 
 bool AndroidBluetoothServer::start(const QBluetoothAddress& address, uint16_t portNumber)
@@ -65,7 +30,7 @@ void AndroidBluetoothServer::onClientConnected()
     {
         OPENAUTO_LOG(info) << "[AndroidBluetoothServer] Device Connected: " << socket_->peerName().toStdString();
         connect(socket_, SIGNAL(readyRead()), this, SLOT(readSocket()));
-        handshakeState_ = ConnectionStatus::DEVICE_CONNECTED;
+        writeSocketInfoRequest();
     }
     else
     {
@@ -90,9 +55,9 @@ bool AndroidBluetoothServer::writeProtoMessage(uint16_t messageType, google::pro
     return true;
 }
 
-void AndroidBluetoothServer::writeSocketInfoMessage()
+void AndroidBluetoothServer::writeSocketInfoRequest()
 {
-    OPENAUTO_LOG(info) << "[AndroidBluetoothServer] Sending socket info.";
+    OPENAUTO_LOG(info) << "[AndroidBluetoothServer] Sending SocketInfoRequest.";
 
     QString ipAddr;
     foreach(QHostAddress addr, QNetworkInterface::allAddresses())
@@ -103,116 +68,147 @@ void AndroidBluetoothServer::writeSocketInfoMessage()
         }
     }
 
-    btservice::proto::SocketInfo socketInfo;
-    socketInfo.set_ip_address(ipAddr.toStdString());
-    socketInfo.set_port(5000);
-    socketInfo.set_status(btservice::proto::Status::STATUS_SUCCESS);
+    btservice::proto::SocketInfoRequest socketInfoRequest;
+    socketInfoRequest.set_ip_address(ipAddr.toStdString());
+    OPENAUTO_LOG(info) << "[AndroidBluetoothServer] ipAddress: "<< ipAddr.toStdString();
 
-    if(this->writeProtoMessage(7, socketInfo))
+    socketInfoRequest.set_port(5000);
+    OPENAUTO_LOG(info) << "[AndroidBluetoothServer] port: "<< 5000;
+
+    if(this->writeProtoMessage(1, socketInfoRequest))
     {
-        OPENAUTO_LOG(info) << "[AndroidBluetoothServer] Sent socket info.";
-        handshakeState_ = ConnectionStatus::SENT_SOCKETINFO_MESSAGE;
+        OPENAUTO_LOG(info) << "[AndroidBluetoothServer] Sent SocketInfoRequest.";
     }
     else
     {
-        OPENAUTO_LOG(error) << "[AndroidBluetoothServer] Error sending socket Info.";
-        handshakeState_ = ConnectionStatus::ERROR;
+        OPENAUTO_LOG(error) << "[AndroidBluetoothServer] Error sending SocketInfoRequest.";
     }
+}
+void AndroidBluetoothServer::writeSocketInfoResponse()
+{
+    OPENAUTO_LOG(info) << "[AndroidBluetoothServer] Sending SocketInfoResponse.";
+    QString ipAddr;
+    foreach(QHostAddress addr, QNetworkInterface::allAddresses())
+    {
+        if(!addr.isLoopback() && (addr.protocol() == QAbstractSocket::IPv4Protocol))
+        {
+            ipAddr = addr.toString();
+        }
+    }
+
+    btservice::proto::SocketInfoResponse socketInfoResponse;
+    socketInfoResponse.set_ip_address(ipAddr.toStdString());
+    OPENAUTO_LOG(info) << "[AndroidBluetoothServer] ipAddress: "<< ipAddr.toStdString();
+
+    socketInfoResponse.set_port(5000);
+    OPENAUTO_LOG(info) << "[AndroidBluetoothServer] port: "<< 5000;
+
+    socketInfoResponse.set_status(btservice::proto::Status::STATUS_SUCCESS);
+    OPENAUTO_LOG(info) << "[AndroidBluetoothServer] status: "<< btservice::proto::Status::STATUS_SUCCESS;
+
+
+    if(this->writeProtoMessage(7, socketInfoResponse))
+    {
+        OPENAUTO_LOG(info) << "[AndroidBluetoothServer] Sent SocketInfoResponse.";
+    }
+    else
+    {
+        OPENAUTO_LOG(error) << "[AndroidBluetoothServer] Error sending SocketInfoResponse.";
+    }
+}
+
+void AndroidBluetoothServer::handleSocketInfoRequestResponse(QByteArray data)
+{
+    btservice::proto::SocketInfoResponse socketInfoResponse;
+    socketInfoResponse.ParseFromArray(data, data.size());
+    OPENAUTO_LOG(info) <<"[AndroidBluetoothServer] Received SocketInfoRequestResponse, status: "<<socketInfoResponse.status();
+}
+
+
+void AndroidBluetoothServer::handleSocketInfoRequest(QByteArray data)
+{
+    OPENAUTO_LOG(info) << "[AndroidBluetoothServer] Reading SocketInfoRequest.";
+
+    btservice::proto::SocketInfoRequest socketInfoRequest;
+    
+    writeSocketInfoResponse();
 }
 
 void AndroidBluetoothServer::writeNetworkInfoMessage()
 {
-    OPENAUTO_LOG(info) << "[AndroidBluetoothServer] Sending network packet.";
+    OPENAUTO_LOG(info) << "[AndroidBluetoothServer] Sending NetworkInfoMessage.";
 
     btservice::proto::NetworkInfo networkMessage;
     networkMessage.set_ssid(config_->getWifiSSID());
-    networkMessage.set_psk(config_->getWifiPassword());
-    foreach(QNetworkInterface netInterface, QNetworkInterface::allInterfaces())
-    {
-        // Return only the first non-loopback MAC Address
-        if (!(netInterface.flags() & QNetworkInterface::IsLoopBack))
-        {
-            networkMessage.set_mac_addr(netInterface.hardwareAddress().toStdString());
-        }
-    }
-    networkMessage.set_security_mode(btservice::proto::SecurityMode::WPA2_PERSONAL);
-    networkMessage.set_ap_type(btservice::proto::AccessPointType::STATIC);
+    OPENAUTO_LOG(info) << "[AndroidBluetoothServer] SSID: "<<config_->getWifiSSID();
 
-    if(this->writeProtoMessage(3, networkMessage))
+    networkMessage.set_psk(config_->getWifiPassword());
+    OPENAUTO_LOG(info) << "[AndroidBluetoothServer] PSKEY: "<<config_->getWifiPassword();
+
+    if(config_->getWifiMAC().empty())
     {
-        OPENAUTO_LOG(info) << "[AndroidBluetoothServer] Sent network packet.";
-        handshakeState_ = ConnectionStatus::SENT_NETWORKINFO_MESSAGE;
+        networkMessage.set_mac_addr(QNetworkInterface::interfaceFromName("wlan0").hardwareAddress().toStdString());
+        OPENAUTO_LOG(info) << "[AndroidBluetoothServer] MAC: "<<QNetworkInterface::interfaceFromName("wlan0").hardwareAddress().toStdString();
     }
     else
     {
-        OPENAUTO_LOG(info) << "[AndroidBluetoothServer] Error sending network packet.";
-        handshakeState_ = ConnectionStatus::ERROR;
+        networkMessage.set_mac_addr(config_->getWifiMAC());
+        OPENAUTO_LOG(info) << "[AndroidBluetoothServer] MAC: "<< config_->getWifiMAC();
     }
+
+    networkMessage.set_security_mode(btservice::proto::SecurityMode::WPA2_PERSONAL);
+    OPENAUTO_LOG(info) << "[AndroidBluetoothServer] Security: "<< btservice::proto::SecurityMode::WPA2_PERSONAL;
+
+    networkMessage.set_ap_type(btservice::proto::AccessPointType::STATIC);
+    OPENAUTO_LOG(info) << "[AndroidBluetoothServer] AP Type: "<< btservice::proto::AccessPointType::STATIC;
+
+
+    if(this->writeProtoMessage(3, networkMessage))
+    {
+        OPENAUTO_LOG(info) << "[AndroidBluetoothServer] Sent NetworkInfoMessage";
+    }
+    else
+    {
+        OPENAUTO_LOG(info) << "[AndroidBluetoothServer] Error sending NetworkInfoMessage.";
+    }
+}
+
+void AndroidBluetoothServer::handleUnknownMessage(int messageType, QByteArray data)
+{
+        OPENAUTO_LOG(info) << "[AndroidBluetoothServer] Received unknown MessageType of "<<messageType;
+        OPENAUTO_LOG(info) << "[AndroidBluetoothServer] Unknown Message Data: "<<data.toHex(' ').toStdString()  ;
 }
 
 void AndroidBluetoothServer::readSocket()
 {
-    OPENAUTO_LOG(info) << "[AndroidBluetoothServer] DATA: ";
     if(!socket_)
     {
         return;
     }
 
-    auto data = socket_->read(1024);
+    auto data = socket_->readAll();
     if(data.length() == 0)
     {
         return;
     }
 
     uint16_t messageType = (data[2] << 8) | data[3];
-    btservice::proto::PhoneResponse resp;
-    OPENAUTO_LOG(info) << "TYPE: " << messageType;
     switch(messageType)
     {
-    case 2:
-        break;
-
-    case 6:
-        resp.ParseFromString(data.toStdString().c_str());
-        break;
-    }
-
-    switch(handshakeState_)
-    {
-    case ConnectionStatus::IDLE:
-    case ConnectionStatus::DEVICE_CONNECTED:
-    case ConnectionStatus::SENDING_SOCKETINFO_MESSAGE:
-    case ConnectionStatus::PHONE_RESP_SOCKETINFO:
-    case ConnectionStatus::SENDING_NETWORKINFO_MESSAGE:
-    case ConnectionStatus::PHONE_RESP_NETWORKINFO:
-    case ConnectionStatus::ERROR:
-        break;
-
-    case ConnectionStatus::SENT_SOCKETINFO_MESSAGE:
-        if(messageType == 2)
-        {
-            OPENAUTO_LOG(info) << "[AndroidBluetoothServer] Phone acknowledged socket info.";
-            handshakeState_ = ConnectionStatus::PHONE_RESP_SOCKETINFO;
-        }
-        else
-        {
-            OPENAUTO_LOG(info) << "[AndroidBluetoothServer] Got unexpected message.";
-            handshakeState_ = ConnectionStatus::ERROR;
-        }
-        break;
-
-    case ConnectionStatus::SENT_NETWORKINFO_MESSAGE:
-        if(messageType == 6)
-        {
-            OPENAUTO_LOG(info) << "[AndroidBluetoothServer] Phone acknowledged network info with status code: " << resp.status_code();
-            handshakeState_ = ConnectionStatus::PHONE_RESP_NETWORKINFO;
-        }
-        else
-        {
-            OPENAUTO_LOG(info) << "[AndroidBluetoothServer] Got unexpected message";
-            handshakeState_ = ConnectionStatus::ERROR;
-        }
-        break;
+        case 1:
+            handleSocketInfoRequest(data);
+            break;
+        case 2:
+            writeNetworkInfoMessage();
+            break;
+        case 7:
+            data.remove(0, 4);
+            handleSocketInfoRequestResponse(data);
+            break;
+        default:
+            data.remove(0, 4);
+            handleUnknownMessage(messageType, data);
+            break;
     }
 }
 

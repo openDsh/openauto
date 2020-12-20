@@ -63,6 +63,7 @@ const std::string Configuration::cInputEnterButtonKey = "Input.EnterButton";
 
 const std::string Configuration::cWifiSSID = "WiFi.SSID";
 const std::string Configuration::cWifiPskey = "WiFi.Password";
+const std::string Configuration::cWifiMAC = "WiFi.AdapterMAC";
 
 Configuration::Configuration()
 {
@@ -105,6 +106,7 @@ void Configuration::load()
 
         wifiSSID_ = iniConfig.get<std::string>(cWifiSSID, "");
         wifiPassword_ = iniConfig.get<std::string>(cWifiPskey, "");
+        wifiMAC_ = iniConfig.get<std::string>(cWifiMAC, "");
     }
     catch(const boost::property_tree::ini_parser_error& e)
     {
@@ -158,6 +160,7 @@ void Configuration::save()
 
     iniConfig.put<std::string>(cWifiSSID, wifiSSID_);
     iniConfig.put<std::string>(cWifiPskey, wifiPassword_);
+    iniConfig.put<std::string>(cWifiMAC, wifiMAC_);
     boost::property_tree::ini_parser::write_ini(cConfigFileName, iniConfig);
 }
 
@@ -319,6 +322,16 @@ std::string Configuration::getWifiPassword()
 void Configuration::setWifiPassword(std::string value)
 {
     wifiPassword_ = value;
+}
+
+std::string Configuration::getWifiMAC()
+{
+    return wifiMAC_;
+}
+
+void Configuration::setWifiMAC(std::string value)
+{
+    wifiMAC_ = value;
 }
 
 void Configuration::readButtonCodes(boost::property_tree::ptree& iniConfig)

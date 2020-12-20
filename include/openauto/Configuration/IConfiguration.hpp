@@ -81,6 +81,8 @@ public:
     virtual void setWifiSSID(std::string value) = 0;
     virtual std::string getWifiPassword() = 0;
     virtual void setWifiPassword(std::string value) = 0;
+    virtual std::string getWifiMAC() = 0;
+    virtual void setWifiMAC(std::string value) = 0;
 };
 
 }
