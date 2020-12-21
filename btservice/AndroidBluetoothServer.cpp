@@ -12,7 +12,6 @@ AndroidBluetoothServer::AndroidBluetoothServer(openauto::configuration::IConfigu
     : rfcommServer_(std::make_unique<QBluetoothServer>(QBluetoothServiceInfo::RfcommProtocol, this))
     , socket_(nullptr)
     , config_(std::move(config))
-    , handshakeState_(ConnectionStatus::IDLE)
 {
     connect(rfcommServer_.get(), &QBluetoothServer::newConnection, this, &AndroidBluetoothServer::onClientConnected);
 }
