@@ -37,19 +37,23 @@ btservice::btservice(openauto::configuration::IConfiguration::Pointer config)
     {
         OPENAUTO_LOG(info) << "[btservice] Service registered, port: " << cServicePortNumber;
     }
-
-    // You'd think that QBluetoothLocalDevice would provide a method for this.. it doesn't
-    QProcess process;
-    process.setProcessChannelMode(QProcess::SeparateChannels);
-    process.start("bluetoothctl");
-    process.waitForStarted();
-    OPENAUTO_LOG(info)<<"[btservice] Attempting to connect to last phone of "<<config->getLastBluetoothPair();
-    process.write(QString("select %1\n").arg(address.toString()).toUtf8());
-    process.write(QString("connect %1\n").arg(QString::fromStdString(config->getLastBluetoothPair())).toUtf8());
-    process.closeWriteChannel();
-    process.waitForFinished();
-    
+    connectToBluetooth(QBluetoothAddress(QString::fromStdString(config->getLastBluetoothPair())));
 }
+
+void btservice::connectToBluetooth(QBluetoothAddress addr)
+{
+    QString program = QString::fromStdString("sudo stdbuf -oL rfcomm connect hci0 ")+addr.toString()+QString::fromStdString(" 2");
+    OPENAUTO_LOG(info)<<"[btservice] Attempting bt connection with `"<<program.toStdString();
+    rfcomm = new QProcess();
+
+//    connect(rfcomm, SIGNAL(started()), this, SLOT(rfcomm_started()));
+ //   connect(rfcomm, SIGNAL(finished(int)), this, SLOT(rfcomm_finished(int)));
+   // connect(this, SIGNAL(kill_hcitool()), hcitool, SLOT(kill()));
+   // connect(this, SIGNAL(terminate_hcitool()), hcitool, SLOT(terminate()));
+
+    rfcomm->start(program, QProcess::Unbuffered | QProcess::ReadWrite);
+}
+
 
 }
 }
