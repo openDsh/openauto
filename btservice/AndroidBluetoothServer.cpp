@@ -121,6 +121,13 @@ void AndroidBluetoothServer::handleSocketInfoRequestResponse(QByteArray data)
     btservice::proto::SocketInfoResponse socketInfoResponse;
     socketInfoResponse.ParseFromArray(data, data.size());
     OPENAUTO_LOG(info) <<"[AndroidBluetoothServer] Received SocketInfoRequestResponse, status: "<<socketInfoResponse.status();
+    if(socketInfoResponse.status() == 0)
+    {
+        // A status of 0 should be successful handshake (unless phone later reports an error, aw well)
+        // save this phone so we can autoconnect to it next time
+        config_->setLastBluetoothPair(socket_->peerAddress().toString().toStdString());
+        config_->save();
+    }
 }
 
 

@@ -83,6 +83,8 @@ public:
     virtual void setWifiPassword(std::string value) = 0;
     virtual std::string getWifiMAC() = 0;
     virtual void setWifiMAC(std::string value) = 0;
+    virtual std::string getLastBluetoothPair() = 0;
+    virtual void setLastBluetoothPair(std::string value) = 0;
 };
 
 }

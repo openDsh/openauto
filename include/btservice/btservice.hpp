@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QProcess> 
 #include <QBluetoothAddress>
 #include "OpenautoLog.hpp"
 #include "btservice/AndroidBluetoothService.hpp"
