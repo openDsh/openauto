@@ -37,21 +37,33 @@ btservice::btservice(openauto::configuration::IConfiguration::Pointer config)
     {
         OPENAUTO_LOG(info) << "[btservice] Service registered, port: " << cServicePortNumber;
     }
-    connectToBluetooth(QBluetoothAddress(QString::fromStdString(config->getLastBluetoothPair())));
+    connectToBluetooth(QBluetoothAddress(QString::fromStdString(config->getLastBluetoothPair())), address);
 }
 
-void btservice::connectToBluetooth(QBluetoothAddress addr)
+void btservice::connectToBluetooth(QBluetoothAddress addr, QBluetoothAddress controller)
 {
+    // The raspberry pi has a really tough time using bluetoothctl (or really anything) to connect to an Android phone
+    // even though phone connecting to the pi is fine.
+    // I found a workaround where you can make the pi attempt an rfcomm connection to the phone, and it connects immediately
+    // This might require setting u+s on rfcomm though
+    // Other computers with more sane bluetooth shouldn't have an issue using bluetoothctl
+    
+    #ifdef RPI
     QString program = QString::fromStdString("sudo stdbuf -oL rfcomm connect hci0 ")+addr.toString()+QString::fromStdString(" 2");
-    OPENAUTO_LOG(info)<<"[btservice] Attempting bt connection with `"<<program.toStdString();
-    rfcomm = new QProcess();
-
-//    connect(rfcomm, SIGNAL(started()), this, SLOT(rfcomm_started()));
- //   connect(rfcomm, SIGNAL(finished(int)), this, SLOT(rfcomm_finished(int)));
-   // connect(this, SIGNAL(kill_hcitool()), hcitool, SLOT(kill()));
-   // connect(this, SIGNAL(terminate_hcitool()), hcitool, SLOT(terminate()));
-
-    rfcomm->start(program, QProcess::Unbuffered | QProcess::ReadWrite);
+    btconnectProcess = new QProcess();
+    OPENAUTO_LOG(info)<<"[btservice] Attempting to connect to last bluetooth device, "<<addr.toString().toStdString()<<" with `"<<program.toStdString();
+    btconnectProcess->start(program, QProcess::Unbuffered | QProcess::ReadWrite);
+    #else
+    QProcess process;
+    process.setProcessChannelMode(QProcess::SeparateChannels);
+    OPENAUTO_LOG(info)<<"[btservice] Attempting to connect to last bluetooth device, "<<addr.toString().toStdString()<<" with bluetoothctl";
+    process.start("bluetoothctl");
+    process.waitForStarted();
+    process.write(QString("select %1\n").arg(controller.toString()).toUtf8());
+    process.write(QString("connect %1\n").arg(addr.toString()).toUtf8());
+    process.closeWriteChannel();
+    process.waitForFinished();
+    #endif
 }
 
 

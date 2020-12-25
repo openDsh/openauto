@@ -19,7 +19,7 @@ public:
 
 private:
     const uint16_t cServicePortNumber = 22;
-    void connectToBluetooth(QBluetoothAddress addr);
+    void connectToBluetooth(QBluetoothAddress addr, QBluetoothAddress controller);
     openauto::btservice::AndroidBluetoothService androidBluetoothService_;
     openauto::btservice::AndroidBluetoothServer androidBluetoothServer_;
     QProcess *rfcomm;
