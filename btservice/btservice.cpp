@@ -50,9 +50,9 @@ void btservice::connectToBluetooth(QBluetoothAddress addr, QBluetoothAddress con
     
     #ifdef RPI
     QString program = QString::fromStdString("sudo stdbuf -oL rfcomm connect hci0 ")+addr.toString()+QString::fromStdString(" 2");
-    btconnectProcess = new QProcess();
+    btConnectProcess = new QProcess();
     OPENAUTO_LOG(info)<<"[btservice] Attempting to connect to last bluetooth device, "<<addr.toString().toStdString()<<" with `"<<program.toStdString();
-    btconnectProcess->start(program, QProcess::Unbuffered | QProcess::ReadWrite);
+    btConnectProcess->start(program, QProcess::Unbuffered | QProcess::ReadWrite);
     #else
     btConnectProcess = new QProcess();
     btConnectProcess->setProcessChannelMode(QProcess::SeparateChannels);
