@@ -54,15 +54,15 @@ void btservice::connectToBluetooth(QBluetoothAddress addr, QBluetoothAddress con
     OPENAUTO_LOG(info)<<"[btservice] Attempting to connect to last bluetooth device, "<<addr.toString().toStdString()<<" with `"<<program.toStdString();
     btconnectProcess->start(program, QProcess::Unbuffered | QProcess::ReadWrite);
     #else
-    QProcess process;
-    process.setProcessChannelMode(QProcess::SeparateChannels);
+    btConnectProcess = new QProcess();
+    btConnectProcess->setProcessChannelMode(QProcess::SeparateChannels);
     OPENAUTO_LOG(info)<<"[btservice] Attempting to connect to last bluetooth device, "<<addr.toString().toStdString()<<" with bluetoothctl";
-    process.start("bluetoothctl");
-    process.waitForStarted();
-    process.write(QString("select %1\n").arg(controller.toString()).toUtf8());
-    process.write(QString("connect %1\n").arg(addr.toString()).toUtf8());
-    process.closeWriteChannel();
-    process.waitForFinished();
+    btConnectProcess->start("bluetoothctl");
+    btConnectProcess->waitForStarted();
+    btConnectProcess->write(QString("select %1\n").arg(controller.toString()).toUtf8());
+    btConnectProcess->write(QString("connect %1\n").arg(addr.toString()).toUtf8());
+    btConnectProcess->closeWriteChannel();
+    btConnectProcess->waitForFinished();
     #endif
 }
 

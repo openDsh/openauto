@@ -22,7 +22,7 @@ private:
     void connectToBluetooth(QBluetoothAddress addr, QBluetoothAddress controller);
     openauto::btservice::AndroidBluetoothService androidBluetoothService_;
     openauto::btservice::AndroidBluetoothServer androidBluetoothServer_;
-    QProcess *rfcomm;
+    QProcess *btConnectProcess;
 };
 
 }
