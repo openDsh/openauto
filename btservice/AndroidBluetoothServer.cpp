@@ -58,18 +58,6 @@ void AndroidBluetoothServer::writeSocketInfoRequest()
 {
     OPENAUTO_LOG(info) << "[AndroidBluetoothServer] Sending SocketInfoRequest.";
 
-    if(this->writeProtoMessage(1, socketInfoRequest))
-    {
-        OPENAUTO_LOG(info) << "[AndroidBluetoothServer] Sent SocketInfoRequest.";
-    }
-    else
-    {
-        OPENAUTO_LOG(error) << "[AndroidBluetoothServer] Error sending SocketInfoRequest.";
-    }
-}
-void AndroidBluetoothServer::writeSocketInfoResponse()
-{
-    OPENAUTO_LOG(info) << "[AndroidBluetoothServer] Sending SocketInfoResponse.";
     QString ipAddr;
     foreach(QHostAddress addr, QNetworkInterface::allAddresses())
     {
@@ -126,23 +114,6 @@ void AndroidBluetoothServer::writeSocketInfoResponse()
     {
         OPENAUTO_LOG(error) << "[AndroidBluetoothServer] Error sending SocketInfoResponse.";
     }
-}
-
-void AndroidBluetoothServer::handleSocketInfoRequestResponse(QByteArray data)
-{
-    btservice::proto::SocketInfoResponse socketInfoResponse;
-    socketInfoResponse.ParseFromArray(data, data.size());
-    OPENAUTO_LOG(info) <<"[AndroidBluetoothServer] Received SocketInfoRequestResponse, status: "<<socketInfoResponse.status();
-}
-
-
-void AndroidBluetoothServer::handleSocketInfoRequest(QByteArray data)
-{
-    OPENAUTO_LOG(info) << "[AndroidBluetoothServer] Reading SocketInfoRequest.";
-
-    btservice::proto::SocketInfoRequest socketInfoRequest;
-    
-    writeSocketInfoResponse();
 }
 
 void AndroidBluetoothServer::handleSocketInfoRequestResponse(QByteArray data)
