@@ -37,7 +37,8 @@ btservice::btservice(openauto::configuration::IConfiguration::Pointer config)
     {
         OPENAUTO_LOG(info) << "[btservice] Service registered, port: " << cServicePortNumber;
     }
-    connectToBluetooth(QBluetoothAddress(QString::fromStdString(config->getLastBluetoothPair())), address);
+    if(config->getAutoconnectBluetooth())
+        connectToBluetooth(QBluetoothAddress(QString::fromStdString(config->getLastBluetoothPair())), address);
 }
 
 void btservice::connectToBluetooth(QBluetoothAddress addr, QBluetoothAddress controller)
@@ -48,12 +49,14 @@ void btservice::connectToBluetooth(QBluetoothAddress addr, QBluetoothAddress con
     // This might require setting u+s on rfcomm though
     // Other computers with more sane bluetooth shouldn't have an issue using bluetoothctl
     
-    #ifdef RPI
+#ifdef RPI
+    // tries to open an rfcomm serial on channel 2
+    // channel doesn't really matter here, 2 is just "somewhat standard"
     QString program = QString::fromStdString("sudo stdbuf -oL rfcomm connect hci0 ")+addr.toString()+QString::fromStdString(" 2");
     btConnectProcess = new QProcess();
     OPENAUTO_LOG(info)<<"[btservice] Attempting to connect to last bluetooth device, "<<addr.toString().toStdString()<<" with `"<<program.toStdString();
     btConnectProcess->start(program, QProcess::Unbuffered | QProcess::ReadWrite);
-    #else
+#else
     btConnectProcess = new QProcess();
     btConnectProcess->setProcessChannelMode(QProcess::SeparateChannels);
     OPENAUTO_LOG(info)<<"[btservice] Attempting to connect to last bluetooth device, "<<addr.toString().toStdString()<<" with bluetoothctl";
@@ -63,7 +66,7 @@ void btservice::connectToBluetooth(QBluetoothAddress addr, QBluetoothAddress con
     btConnectProcess->write(QString("connect %1\n").arg(addr.toString()).toUtf8());
     btConnectProcess->closeWriteChannel();
     btConnectProcess->waitForFinished();
-    #endif
+#endif
 }
 
 

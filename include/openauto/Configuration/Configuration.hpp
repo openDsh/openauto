@@ -74,6 +74,8 @@ public:
     void setWifiPassword(std::string value) override;
     std::string getWifiMAC() override;
     void setWifiMAC(std::string value) override;
+    bool getAutoconnectBluetooth() override;
+    void setAutoconnectBluetooth(bool value) override;
     std::string getLastBluetoothPair() override;
     void setLastBluetoothPair(std::string value) override;
 
@@ -99,6 +101,7 @@ private:
     std::string wifiSSID_;
     std::string wifiPassword_;
     std::string wifiMAC_;
+    bool autoconnectBluetooth_;
     std::string lastBluetoothPair_;
 
     static const std::string cConfigFileName;
@@ -141,6 +144,7 @@ private:
     static const std::string cWifiSSID;
     static const std::string cWifiPskey;
     static const std::string cWifiMAC;
+    static const std::string cAutoconnectBluetooth;
     static const std::string cLastBluetoothPair;
 };
 
