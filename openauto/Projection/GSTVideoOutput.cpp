@@ -53,7 +53,7 @@ GSTVideoOutput::GSTVideoOutput(configuration::IConfiguration::Pointer configurat
         #else
                                "avdec_h264 ! "
         #endif
-                               "capsfilter caps=video/x-raw name=mycapsfilter";
+                               "videocrop top=0 bottom=0 ! capsfilter caps=video/x-raw name=mycapsfilter";
     #ifdef RPI
         OPENAUTO_LOG(info) << "[GSTVideoOutput] RPI Build, running with " <<
         #ifdef PI4

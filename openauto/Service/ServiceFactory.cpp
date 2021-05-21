@@ -30,6 +30,8 @@
 #include "openauto/Service/SensorService.hpp"
 #include "openauto/Service/BluetoothService.hpp"
 #include "openauto/Service/InputService.hpp"
+#include "openauto/Service/NavigationStatusService.hpp"
+#include "openauto/Service/MediaStatusService.hpp"
 #include "openauto/Projection/QtVideoOutput.hpp"
 #include "openauto/Projection/GSTVideoOutput.hpp"
 #include "openauto/Projection/OMXVideoOutput.hpp"
@@ -79,6 +81,8 @@ ServiceList ServiceFactory::create(aasdk::messenger::IMessenger::Pointer messeng
 
     serviceList.emplace_back(this->createVideoService(messenger));
     serviceList.emplace_back(this->createBluetoothService(messenger));
+    serviceList.emplace_back(this->createNavigationStatusService(messenger));
+    serviceList.emplace_back(this->createMediaStatusService(messenger));
     serviceList.emplace_back(this->createInputService(messenger));
 
     return serviceList;
@@ -125,6 +129,16 @@ IService::Pointer ServiceFactory::createBluetoothService(aasdk::messenger::IMess
     }
 
     return std::make_shared<BluetoothService>(ioService_, messenger, std::move(bluetoothDevice));
+}
+
+IService::Pointer ServiceFactory::createNavigationStatusService(aasdk::messenger::IMessenger::Pointer messenger)
+{
+    return std::make_shared<NavigationStatusService>(ioService_, messenger);
+}
+
+IService::Pointer ServiceFactory::createMediaStatusService(aasdk::messenger::IMessenger::Pointer messenger)
+{
+    return std::make_shared<MediaStatusService>(ioService_, messenger);
 }
 
 IService::Pointer ServiceFactory::createInputService(aasdk::messenger::IMessenger::Pointer messenger)

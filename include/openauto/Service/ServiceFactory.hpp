@@ -49,6 +49,8 @@ public:
 private:
     IService::Pointer createVideoService(aasdk::messenger::IMessenger::Pointer messenger);
     IService::Pointer createBluetoothService(aasdk::messenger::IMessenger::Pointer messenger);
+    IService::Pointer createNavigationStatusService(aasdk::messenger::IMessenger::Pointer messenger);
+    IService::Pointer createMediaStatusService(aasdk::messenger::IMessenger::Pointer messenger);
     IService::Pointer createInputService(aasdk::messenger::IMessenger::Pointer messenger);
     void createAudioServices(ServiceList& serviceList, aasdk::messenger::IMessenger::Pointer messenger);
 

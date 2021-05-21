@@ -54,7 +54,6 @@ void SensorService::fillFeatures(aasdk::proto::messages::ServiceDiscoveryRespons
 
     auto* channelDescriptor = response.add_channels();
     channelDescriptor->set_channel_id(static_cast<uint32_t>(channel_->getId()));
-
     auto* sensorChannel = channelDescriptor->mutable_sensor_channel();
     sensorChannel->add_sensors()->set_type(aasdk::proto::enums::SensorType::DRIVING_STATUS);
     //sensorChannel->add_sensors()->set_type(aasdk::proto::enums::SensorType::LOCATION);
