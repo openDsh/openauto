@@ -13,6 +13,8 @@ add_library(openauto SHARED
         Service/Pinger.cpp
         Service/AndroidAutoEntity.cpp
         Service/VideoService.cpp
+        Service/NavigationStatusService.cpp
+        Service/MediaStatusService.cpp
         Configuration/RecentAddressesList.cpp
         Configuration/Configuration.cpp
         Projection/RemoteBluetoothDevice.cpp
@@ -28,6 +30,7 @@ add_library(openauto SHARED
         Projection/RtAudioOutput.cpp
         Projection/QtAudioOutput.cpp
         ${CMAKE_SOURCE_DIR}/btservice/AndroidBluetoothServer.cpp
+        ${CMAKE_SOURCE_DIR}/btservice/AndroidBluetoothServer.cpp
         ${CMAKE_SOURCE_DIR}/btservice/AndroidBluetoothService.cpp
         ${CMAKE_SOURCE_DIR}/btservice/btservice.cpp
         ${CMAKE_SOURCE_DIR}/include/btservice/AndroidBluetoothServer.hpp
@@ -42,7 +45,9 @@ add_library(openauto SHARED
         ${CMAKE_SOURCE_DIR}/include/openauto/Configuration/IRecentAddressesList.hpp
         ${CMAKE_SOURCE_DIR}/include/openauto/Configuration/HandednessOfTrafficType.hpp
         ${CMAKE_SOURCE_DIR}/include/openauto/Configuration/BluetootAdapterType.hpp
-        ${CMAKE_SOURCE_DIR}/include/openauto/Service/MediaAudioService.hpp
+        ${CMAKE_SOURCE_DIR}/include/openauto/Service/NavigationStatusService.hpp
+        ${CMAKE_SOURCE_DIR}/include/openauto/Service/MediaStatusService.hpp
+	${CMAKE_SOURCE_DIR}/include/openauto/Service/MediaAudioService.hpp
         ${CMAKE_SOURCE_DIR}/include/openauto/Service/SensorService.hpp
         ${CMAKE_SOURCE_DIR}/include/openauto/Service/IPinger.hpp
         ${CMAKE_SOURCE_DIR}/include/openauto/Service/IAndroidAutoEntity.hpp
