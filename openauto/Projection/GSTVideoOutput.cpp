@@ -15,7 +15,6 @@
 *  You should have received a copy of the GNU General Public License
 *  along with openauto. If not, see <http://www.gnu.org/licenses/>.
 */
-#define USE_GST
 #ifdef USE_GST
 
 #include "aasdk/Common/Data.hpp"
@@ -81,7 +80,7 @@ GSTVideoOutput::GSTVideoOutput(configuration::IConfiguration::Pointer configurat
     vidSrc_ = GST_APP_SRC(gst_bin_get_by_name(GST_BIN(vidPipeline_), "mysrc"));
     gst_app_src_set_stream_type(vidSrc_, GST_APP_STREAM_TYPE_STREAM);
 
-    vidCrop_ = GST_APP_SRC(gst_bin_get_by_name(GST_BIN(vidPipeline_), "videocropper"));
+    vidCrop_ = GST_VIDEO_FILTER(gst_bin_get_by_name(GST_BIN(vidPipeline_), "videocropper"));
 
     connect(this, &GSTVideoOutput::startPlayback, this, &GSTVideoOutput::onStartPlayback, Qt::QueuedConnection);
     connect(this, &GSTVideoOutput::stopPlayback, this, &GSTVideoOutput::onStopPlayback, Qt::QueuedConnection);
@@ -221,6 +220,11 @@ void GSTVideoOutput::resize()
 {
     OPENAUTO_LOG(info) << "[GSTVideoOutput] Got resize request to "<< videoContainer_->width() << "x" << videoContainer_->height();
 
+    if(videoWidget_ != nullptr && videoContainer_ != nullptr)
+    {
+        videoWidget_->resize(videoContainer_->size());
+    }
+
     int width = 0;
     int height = 0;
     int containerWidth = videoContainer_->width();
@@ -234,30 +238,36 @@ void GSTVideoOutput::resize()
         case aasdk::proto::enums::VideoResolution_Enum__720p:
             width = 1280;
             height = 720;
+            break;
         case aasdk::proto::enums::VideoResolution_Enum__480p:
-            width = 720;
+            width = 800;
             height = 480;
+            break;
     }
 
-    int marginWidth = 0;
-    int marginHeight = 0;
-    if(abs(containerWidth - width) >= abs(containerHeight-height)){
-        marginWidth = width - containerWidth * height/containerHeight;
-        marginWidth /= 2;
-    }else{
-        marginHeight = height - containerHeight * width/containerWidth;
+    double marginWidth = 0;
+    double marginHeight = 0;
+
+    double widthRatio = (double)containerWidth / width;
+    double heightRatio = (double)containerHeight / height;
+
+    if(widthRatio > heightRatio){
+        //cropping height
+        marginHeight = (widthRatio * height - containerHeight)/widthRatio;
         marginHeight /= 2;
+    }else{
+        //cropping width
+        marginWidth = (heightRatio * width - containerWidth)/heightRatio;
+        marginWidth /= 2;
     }
-    OPENAUTO_LOG(info) << "[GSTVideoOutput] Android Auto is "<< width << "x" << height << ", calculated margins of: " << marginWidth << "x" << marginHeight;
-    g_object_set(vidCrop_, "top", marginHeight, nullptr);
-    g_object_set(vidCrop_, "bottom", marginHeight, nullptr);
-    g_object_set(vidCrop_, "left", marginWidth, nullptr);
-    g_object_set(vidCrop_, "right", marginWidth, nullptr);
+    
 
-    if(videoWidget_ != nullptr && videoContainer_ != nullptr)
-    {
-        videoWidget_->resize(videoContainer_->size());
-    }
+    OPENAUTO_LOG(info) << "[GSTVideoOutput] Android Auto is "<< width << "x" << height << ", calculated margins of: " << marginWidth << "x" << marginHeight;
+    g_object_set(vidCrop_, "top", (int)marginHeight, nullptr);
+    g_object_set(vidCrop_, "bottom", (int)marginHeight, nullptr);
+    g_object_set(vidCrop_, "left", (int)marginWidth, nullptr);
+    g_object_set(vidCrop_, "right", (int)marginWidth, nullptr);
+    this->configuration_->setVideoMargins(QRect(0,0,(int)(marginWidth*2), (int)(marginHeight*2)));
 }
 
 }

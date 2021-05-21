@@ -145,6 +145,11 @@ IService::Pointer ServiceFactory::createInputService(aasdk::messenger::IMessenge
         break;
     }
 
+    //account for margins being applied to android auto
+    videoGeometry.setWidth(videoGeometry.width()-configuration_->getVideoMargins().width());
+    videoGeometry.setHeight(videoGeometry.height()-configuration_->getVideoMargins().height());
+
+
     QObject* inputObject = activeArea_ == nullptr ? qobject_cast<QObject*>(QApplication::instance()) : qobject_cast<QObject*>(activeArea_);
     inputDevice_ = std::make_shared<projection::InputDevice>(*inputObject, configuration_, std::move(screenGeometry_), std::move(videoGeometry));
 
