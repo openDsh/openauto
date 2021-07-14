@@ -25,6 +25,7 @@
 #include "aasdk/TCP/ITCPEndpoint.hpp"
 #include "openauto/Service/IAndroidAutoEntityEventHandler.hpp"
 #include "openauto/Service/IAndroidAutoEntityFactory.hpp"
+#include "openauto/Service/IService.hpp"
 
 namespace openauto
 {
@@ -35,14 +36,18 @@ public:
     typedef std::shared_ptr<App> Pointer;
 
     App(boost::asio::io_service& ioService, aasdk::usb::USBWrapper& usbWrapper, aasdk::tcp::ITCPWrapper& tcpWrapper, openauto::service::IAndroidAutoEntityFactory& androidAutoEntityFactory,
-        aasdk::usb::IUSBHub::Pointer usbHub, aasdk::usb::IConnectedAccessoriesEnumerator::Pointer connectedAccessoriesEnumerator);
+        aasdk::usb::IUSBHub::Pointer usbHub, aasdk::usb::IConnectedAccessoriesEnumerator::Pointer connectedAccessoriesEnumerator, std::function<void(bool)> inputServiceCallback_=nullptr);
 
     void waitForDevice(bool enumerate = false);
     void start(aasdk::tcp::ITCPEndpoint::SocketPointer socket);
     void stop();
     void onAndroidAutoQuit() override;
+    service::IService::Pointer getInputService();
+
+
 
 private:
+    std::function<void(bool)> androidAutoStatusCallback_;
     using std::enable_shared_from_this<App>::shared_from_this;
     void enumerateDevices();
     void waitForUSBDevice();

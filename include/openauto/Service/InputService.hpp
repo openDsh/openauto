@@ -38,6 +38,9 @@ class InputService:
 public:
     InputService(boost::asio::io_service& ioService, aasdk::messenger::IMessenger::Pointer messenger, projection::IInputDevice::Pointer inputDevice);
 
+    void sendPlayButtonEvent();
+    void sendPauseButtonEvent();
+
     void start() override;
     void stop() override;
     void fillFeatures(aasdk::proto::messages::ServiceDiscoveryResponse& response) override;
@@ -47,12 +50,14 @@ public:
     void onButtonEvent(const projection::ButtonEvent& event) override;
     void onTouchEvent(const projection::TouchEvent& event) override;
 
+
 private:
     using std::enable_shared_from_this<InputService>::shared_from_this;
 
     boost::asio::io_service::strand strand_;
     aasdk::channel::input::InputServiceChannel::Pointer channel_;
     projection::IInputDevice::Pointer inputDevice_;
+    bool serviceActive = false;
 };
 
 }

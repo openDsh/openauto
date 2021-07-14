@@ -294,5 +294,11 @@ void AndroidAutoEntity::sendPing()
     controlServiceChannel_->sendPingRequest(request, std::move(promise));
 }
 
+IService::Pointer AndroidAutoEntity::getInputService()
+{
+    return serviceList_.back();
+}
+
+
 }
 }
