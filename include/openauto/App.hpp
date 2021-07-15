@@ -36,15 +36,12 @@ public:
     typedef std::shared_ptr<App> Pointer;
 
     App(boost::asio::io_service& ioService, aasdk::usb::USBWrapper& usbWrapper, aasdk::tcp::ITCPWrapper& tcpWrapper, openauto::service::IAndroidAutoEntityFactory& androidAutoEntityFactory,
-        aasdk::usb::IUSBHub::Pointer usbHub, aasdk::usb::IConnectedAccessoriesEnumerator::Pointer connectedAccessoriesEnumerator, std::function<void(bool)> inputServiceCallback_=nullptr);
+        aasdk::usb::IUSBHub::Pointer usbHub, aasdk::usb::IConnectedAccessoriesEnumerator::Pointer connectedAccessoriesEnumerator);
 
     void waitForDevice(bool enumerate = false);
     void start(aasdk::tcp::ITCPEndpoint::SocketPointer socket);
     void stop();
     void onAndroidAutoQuit() override;
-    service::IService::Pointer getInputService();
-
-
 
 private:
     std::function<void(bool)> androidAutoStatusCallback_;

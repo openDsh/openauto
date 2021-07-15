@@ -58,9 +58,6 @@ public:
     void onPingResponse(const aasdk::proto::messages::PingResponse& response) override;
     void onChannelError(const aasdk::error::Error& e) override;
     void onVoiceSessionRequest(const aasdk::proto::messages::VoiceSessionRequest& request) override;
-
-    IService::Pointer getInputService() override;
-
 private:
     using std::enable_shared_from_this<AndroidAutoEntity>::shared_from_this;
     void triggerQuit();

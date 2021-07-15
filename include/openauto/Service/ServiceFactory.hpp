@@ -25,6 +25,7 @@
 #include "openauto/Projection/GSTVideoOutput.hpp"
 #include "openauto/Projection/QtVideoOutput.hpp"
 #include "openauto/Service/SensorService.hpp"
+#include "openauto/Service/InputService.hpp"
 #include "btservice/btservice.hpp"
 
 namespace openauto
@@ -40,6 +41,7 @@ public:
     void setOpacity(unsigned int alpha);
     void resize();
     void setNightMode(bool nightMode);
+    void sendButtonPress(aasdk::proto::enums::ButtonCode::Enum buttonCode);
     void sendKeyEvent(QKeyEvent* event);
     static QRect mapActiveAreaToGlobal(QWidget* activeArea);
 #ifdef USE_OMX
@@ -49,7 +51,7 @@ public:
 private:
     IService::Pointer createVideoService(aasdk::messenger::IMessenger::Pointer messenger);
     IService::Pointer createBluetoothService(aasdk::messenger::IMessenger::Pointer messenger);
-    IService::Pointer createInputService(aasdk::messenger::IMessenger::Pointer messenger);
+    std::shared_ptr<InputService> createInputService(aasdk::messenger::IMessenger::Pointer messenger);
     void createAudioServices(ServiceList& serviceList, aasdk::messenger::IMessenger::Pointer messenger);
 
     boost::asio::io_service& ioService_;
@@ -68,6 +70,7 @@ private:
     btservice::btservice btservice_;
     bool nightMode_;
     std::weak_ptr<SensorService> sensorService_;
+    std::weak_ptr<InputService> inputService_;
 };
 
 }

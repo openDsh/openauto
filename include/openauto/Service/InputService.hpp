@@ -38,9 +38,7 @@ class InputService:
 public:
     InputService(boost::asio::io_service& ioService, aasdk::messenger::IMessenger::Pointer messenger, projection::IInputDevice::Pointer inputDevice);
 
-    void sendPlayButtonEvent();
-    void sendPauseButtonEvent();
-
+    void sendButtonPress(aasdk::proto::enums::ButtonCode::Enum buttonCode);
     void start() override;
     void stop() override;
     void fillFeatures(aasdk::proto::messages::ServiceDiscoveryResponse& response) override;
@@ -49,7 +47,6 @@ public:
     void onChannelError(const aasdk::error::Error& e) override;
     void onButtonEvent(const projection::ButtonEvent& event) override;
     void onTouchEvent(const projection::TouchEvent& event) override;
-
 
 private:
     using std::enable_shared_from_this<InputService>::shared_from_this;

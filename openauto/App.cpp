@@ -26,7 +26,7 @@ namespace openauto
 {
 
 App::App(boost::asio::io_service& ioService, aasdk::usb::USBWrapper& usbWrapper, aasdk::tcp::ITCPWrapper& tcpWrapper, openauto::service::IAndroidAutoEntityFactory& androidAutoEntityFactory,
-         aasdk::usb::IUSBHub::Pointer usbHub, aasdk::usb::IConnectedAccessoriesEnumerator::Pointer connectedAccessoriesEnumerator, std::function<void(bool)> androidAutoStatusCallback)
+         aasdk::usb::IUSBHub::Pointer usbHub, aasdk::usb::IConnectedAccessoriesEnumerator::Pointer connectedAccessoriesEnumerator)
     : ioService_(ioService)
     , usbWrapper_(usbWrapper)
     , tcpWrapper_(tcpWrapper)
@@ -35,7 +35,6 @@ App::App(boost::asio::io_service& ioService, aasdk::usb::USBWrapper& usbWrapper,
     , usbHub_(std::move(usbHub))
     , acceptor_(ioService_, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), 5000))
     , connectedAccessoriesEnumerator_(std::move(connectedAccessoriesEnumerator))
-    , androidAutoStatusCallback_(androidAutoStatusCallback)
     , isStopped_(false)
 {
 
@@ -74,10 +73,6 @@ void App::start(aasdk::tcp::ITCPEndpoint::SocketPointer socket)
             auto tcpEndpoint(std::make_shared<aasdk::tcp::TCPEndpoint>(tcpWrapper_, std::move(socket)));
             androidAutoEntity_ = androidAutoEntityFactory_.create(std::move(tcpEndpoint));
             androidAutoEntity_->start(*this);
-            if(androidAutoStatusCallback_!=nullptr)
-            {
-                androidAutoStatusCallback_(true);
-            }
         }
         catch(const aasdk::error::Error& error)
         {
@@ -87,15 +82,6 @@ void App::start(aasdk::tcp::ITCPEndpoint::SocketPointer socket)
             this->waitForDevice();
         }
     });
-}
-
-service::IService::Pointer App::getInputService()
-{
-    if(androidAutoEntity_ == nullptr)
-    {
-        OPENAUTO_LOG(error) << "[App] AndroidAutoEntity is nullptr";
-    }
-    return androidAutoEntity_->getInputService();
 }
 
 void App::stop()
@@ -130,11 +116,6 @@ void App::aoapDeviceHandler(aasdk::usb::DeviceHandle deviceHandle)
         auto aoapDevice(aasdk::usb::AOAPDevice::create(usbWrapper_, ioService_, deviceHandle));
         androidAutoEntity_ = androidAutoEntityFactory_.create(std::move(aoapDevice));
         androidAutoEntity_->start(*this);
-        if(androidAutoStatusCallback_!=nullptr)
-        {
-            androidAutoStatusCallback_(true);
-        }
-
     }
     catch(const aasdk::error::Error& error)
     {

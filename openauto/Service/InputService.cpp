@@ -130,7 +130,7 @@ void InputService::onBindingRequest(const aasdk::proto::messages::BindingRequest
 
 void InputService::onChannelError(const aasdk::error::Error& e)
 {
-    OPENAUTO_LOG(error) << "[SensorService] channel error: " << e.what();
+    OPENAUTO_LOG(error) << "[InputService] channel error: " << e.what();
 }
 
 void InputService::onButtonEvent(const projection::ButtonEvent& event)
@@ -163,18 +163,14 @@ void InputService::onButtonEvent(const projection::ButtonEvent& event)
     });
 }
 
-void InputService::sendPlayButtonEvent()
-{
-    onButtonEvent({projection::ButtonEventType::PRESS, projection::WheelDirection::NONE, aasdk::proto::enums::ButtonCode::PLAY});
-    onButtonEvent({projection::ButtonEventType::RELEASE, projection::WheelDirection::NONE, aasdk::proto::enums::ButtonCode::PLAY});
+void InputService::sendButtonPress(aasdk::proto::enums::ButtonCode::Enum buttonCode)
+{    
+    OPENAUTO_LOG(error) << "[InputService] injecting button press";
 
+    onButtonEvent({projection::ButtonEventType::PRESS, projection::WheelDirection::NONE, buttonCode});
+    onButtonEvent({projection::ButtonEventType::RELEASE, projection::WheelDirection::NONE, buttonCode});
 }
 
-void InputService::sendPauseButtonEvent()
-{
-    onButtonEvent({projection::ButtonEventType::PRESS, projection::WheelDirection::NONE, aasdk::proto::enums::ButtonCode::PAUSE});
-    onButtonEvent({projection::ButtonEventType::RELEASE, projection::WheelDirection::NONE, aasdk::proto::enums::ButtonCode::PAUSE});
-}
 
 void InputService::onTouchEvent(const projection::TouchEvent& event)
 {

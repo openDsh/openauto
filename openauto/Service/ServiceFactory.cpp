@@ -79,7 +79,9 @@ ServiceList ServiceFactory::create(aasdk::messenger::IMessenger::Pointer messeng
 
     serviceList.emplace_back(this->createVideoService(messenger));
     serviceList.emplace_back(this->createBluetoothService(messenger));
-    serviceList.emplace_back(this->createInputService(messenger));
+    std::shared_ptr<InputService> inputService = this->createInputService(messenger);
+    inputService_ = inputService;
+    serviceList.emplace_back(inputService);
     return serviceList;
 }
 
@@ -126,7 +128,7 @@ IService::Pointer ServiceFactory::createBluetoothService(aasdk::messenger::IMess
     return std::make_shared<BluetoothService>(ioService_, messenger, std::move(bluetoothDevice));
 }
 
-IService::Pointer ServiceFactory::createInputService(aasdk::messenger::IMessenger::Pointer messenger)
+std::shared_ptr<InputService> ServiceFactory::createInputService(aasdk::messenger::IMessenger::Pointer messenger)
 {
     QRect videoGeometry;
     switch(configuration_->getVideoResolution())
@@ -223,6 +225,15 @@ void ServiceFactory::setNightMode(bool nightMode)
     if(std::shared_ptr<SensorService> sensorService = sensorService_.lock())
     {
         sensorService->setNightMode(nightMode_);
+    }
+}
+
+void ServiceFactory::sendButtonPress(aasdk::proto::enums::ButtonCode::Enum buttonCode)
+{
+    if(std::shared_ptr<InputService> inputService = inputService_.lock())
+    {
+        
+        inputService->sendButtonPress(buttonCode);
     }
 }
 
