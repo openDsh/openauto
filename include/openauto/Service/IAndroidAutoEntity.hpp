@@ -20,7 +20,6 @@
 
 #include <memory>
 #include "IAndroidAutoEntityEventHandler.hpp"
-#include "IService.hpp"
 
 namespace openauto
 {

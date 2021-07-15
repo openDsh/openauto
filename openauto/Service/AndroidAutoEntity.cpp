@@ -294,7 +294,5 @@ void AndroidAutoEntity::sendPing()
     controlServiceChannel_->sendPingRequest(request, std::move(promise));
 }
 
-
-
 }
 }

@@ -171,7 +171,6 @@ void InputService::sendButtonPress(aasdk::proto::enums::ButtonCode::Enum buttonC
     onButtonEvent({projection::ButtonEventType::RELEASE, projection::WheelDirection::NONE, buttonCode});
 }
 
-
 void InputService::onTouchEvent(const projection::TouchEvent& event)
 {
     auto timestamp = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch());

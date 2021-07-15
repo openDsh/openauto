@@ -25,7 +25,6 @@
 #include "aasdk/TCP/ITCPEndpoint.hpp"
 #include "openauto/Service/IAndroidAutoEntityEventHandler.hpp"
 #include "openauto/Service/IAndroidAutoEntityFactory.hpp"
-#include "openauto/Service/IService.hpp"
 
 namespace openauto
 {
@@ -44,7 +43,6 @@ public:
     void onAndroidAutoQuit() override;
 
 private:
-    std::function<void(bool)> androidAutoStatusCallback_;
     using std::enable_shared_from_this<App>::shared_from_this;
     void enumerateDevices();
     void waitForUSBDevice();
