@@ -228,12 +228,12 @@ void ServiceFactory::setNightMode(bool nightMode)
     }
 }
 
-void ServiceFactory::sendButtonPress(aasdk::proto::enums::ButtonCode::Enum buttonCode)
+void ServiceFactory::sendButtonPress(aasdk::proto::enums::ButtonCode::Enum buttonCode, projection::WheelDirection wheelDirection)
 {
     if(std::shared_ptr<InputService> inputService = inputService_.lock())
     {
         
-        inputService->sendButtonPress(buttonCode);
+        inputService->sendButtonPress(buttonCode, wheelDirection);
     }
 }
 

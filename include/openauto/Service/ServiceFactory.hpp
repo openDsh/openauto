@@ -41,7 +41,7 @@ public:
     void setOpacity(unsigned int alpha);
     void resize();
     void setNightMode(bool nightMode);
-    void sendButtonPress(aasdk::proto::enums::ButtonCode::Enum buttonCode);
+    void sendButtonPress(aasdk::proto::enums::ButtonCode::Enum buttonCode, projection::WheelDirection wheelDirection = projection::WheelDirection::NONE);
     void sendKeyEvent(QKeyEvent* event);
     static QRect mapActiveAreaToGlobal(QWidget* activeArea);
 #ifdef USE_OMX
