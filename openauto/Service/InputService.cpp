@@ -30,7 +30,7 @@ InputService::InputService(boost::asio::io_service& ioService, aasdk::messenger:
     , channel_(std::make_shared<aasdk::channel::input::InputServiceChannel>(strand_, std::move(messenger)))
     , inputDevice_(std::move(inputDevice))
 {
-
+    OPENAUTO_LOG(info) << "[InputService] Created";
 }
 
 void InputService::start()
@@ -39,6 +39,7 @@ void InputService::start()
         OPENAUTO_LOG(info) << "[InputService] start.";
         channel_->receive(this->shared_from_this());
     });
+    serviceActive = true;
 }
 
 void InputService::stop()
@@ -47,6 +48,7 @@ void InputService::stop()
         OPENAUTO_LOG(info) << "[InputService] stop.";
         inputDevice_->stop();
     });
+    serviceActive = false;
 }
 
 void InputService::fillFeatures(aasdk::proto::messages::ServiceDiscoveryResponse& response)
@@ -128,11 +130,12 @@ void InputService::onBindingRequest(const aasdk::proto::messages::BindingRequest
 
 void InputService::onChannelError(const aasdk::error::Error& e)
 {
-    OPENAUTO_LOG(error) << "[SensorService] channel error: " << e.what();
+    OPENAUTO_LOG(error) << "[InputService] channel error: " << e.what();
 }
 
 void InputService::onButtonEvent(const projection::ButtonEvent& event)
 {
+    if(!serviceActive) return;
     auto timestamp = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch());
 
     strand_.dispatch([this, self = this->shared_from_this(), event = std::move(event), timestamp = std::move(timestamp)]() {
@@ -158,6 +161,21 @@ void InputService::onButtonEvent(const projection::ButtonEvent& event)
         promise->then([]() {}, std::bind(&InputService::onChannelError, this->shared_from_this(), std::placeholders::_1));
         channel_->sendInputEventIndication(inputEventIndication, std::move(promise));
     });
+}
+
+void InputService::sendButtonPress(aasdk::proto::enums::ButtonCode::Enum buttonCode, projection::WheelDirection wheelDirection)
+{    
+    OPENAUTO_LOG(info) << "[InputService] injecting button press";
+    if(buttonCode == aasdk::proto::enums::ButtonCode::SCROLL_WHEEL)
+    {
+        onButtonEvent({projection::ButtonEventType::NONE, wheelDirection, buttonCode});
+
+    }
+    else
+    {
+        onButtonEvent({projection::ButtonEventType::PRESS, projection::WheelDirection::NONE, buttonCode});
+        onButtonEvent({projection::ButtonEventType::RELEASE, projection::WheelDirection::NONE, buttonCode});
+    }
 }
 
 void InputService::onTouchEvent(const projection::TouchEvent& event)

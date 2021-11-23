@@ -83,8 +83,10 @@ ServiceList ServiceFactory::create(aasdk::messenger::IMessenger::Pointer messeng
     serviceList.emplace_back(this->createBluetoothService(messenger));
     serviceList.emplace_back(this->createNavigationStatusService(messenger));
     serviceList.emplace_back(this->createMediaStatusService(messenger));
-    serviceList.emplace_back(this->createInputService(messenger));
 
+    std::shared_ptr<InputService> inputService = this->createInputService(messenger);
+    inputService_ = inputService;
+    serviceList.emplace_back(inputService);
     return serviceList;
 }
 
@@ -141,7 +143,7 @@ IService::Pointer ServiceFactory::createMediaStatusService(aasdk::messenger::IMe
     return std::make_shared<MediaStatusService>(ioService_, messenger);
 }
 
-IService::Pointer ServiceFactory::createInputService(aasdk::messenger::IMessenger::Pointer messenger)
+std::shared_ptr<InputService> ServiceFactory::createInputService(aasdk::messenger::IMessenger::Pointer messenger)
 {
     QRect videoGeometry;
     switch(configuration_->getVideoResolution())
@@ -158,6 +160,11 @@ IService::Pointer ServiceFactory::createInputService(aasdk::messenger::IMessenge
         videoGeometry = QRect(0, 0, 800, 480);
         break;
     }
+
+    //account for margins being applied to android auto
+    videoGeometry.setWidth(videoGeometry.width()-configuration_->getVideoMargins().width());
+    videoGeometry.setHeight(videoGeometry.height()-configuration_->getVideoMargins().height());
+
 
     QObject* inputObject = activeArea_ == nullptr ? qobject_cast<QObject*>(QApplication::instance()) : qobject_cast<QObject*>(activeArea_);
     inputDevice_ = std::make_shared<projection::InputDevice>(*inputObject, configuration_, std::move(screenGeometry_), std::move(videoGeometry));
@@ -233,6 +240,15 @@ void ServiceFactory::setNightMode(bool nightMode)
     if(std::shared_ptr<SensorService> sensorService = sensorService_.lock())
     {
         sensorService->setNightMode(nightMode_);
+    }
+}
+
+void ServiceFactory::sendButtonPress(aasdk::proto::enums::ButtonCode::Enum buttonCode, projection::WheelDirection wheelDirection)
+{
+    if(std::shared_ptr<InputService> inputService = inputService_.lock())
+    {
+        
+        inputService->sendButtonPress(buttonCode, wheelDirection);
     }
 }
 

@@ -35,6 +35,9 @@ public:
     void fillFeatures(aasdk::proto::messages::ServiceDiscoveryResponse& response) override;
     void onChannelOpenRequest(const aasdk::proto::messages::ChannelOpenRequest& request) override;
     void onChannelError(const aasdk::error::Error& e) override;
+    void onMetadataUpdate(const aasdk::proto::messages::MediaInfoChannelMetadataData& metadata) override;
+    void onPlaybackUpdate(const aasdk::proto::messages::MediaInfoChannelPlaybackData& playback) override;
+
 
 private:
     using std::enable_shared_from_this<MediaStatusService>::shared_from_this;

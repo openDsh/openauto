@@ -79,6 +79,7 @@ private:
     QGst::ElementPtr videoSink_;
     QQuickWidget* videoWidget_;
     GstElement* vidPipeline_;
+    GstVideoFilter* vidCrop_;
     GstAppSrc* vidSrc_;
     QWidget* videoContainer_;
     QGst::Quick::VideoSurface* surface_;

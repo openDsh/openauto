@@ -59,5 +59,25 @@ void MediaStatusService::onChannelError(const aasdk::error::Error& e)
     OPENAUTO_LOG(error) << "[MediaStatusService] channel error: " << e.what();
 }
 
+void MediaStatusService::onMetadataUpdate(const aasdk::proto::messages::MediaInfoChannelMetadataData& metadata)
+{
+    OPENAUTO_LOG(info) << "[MediaStatusService] Metadata update"
+                       << ", track: " <<  metadata.track_name()
+                       << (metadata.has_artist_name()?", artist: ":"") << (metadata.has_artist_name()?metadata.artist_name():"")
+                       << (metadata.has_album_name()?", album: ":"") << (metadata.has_album_name()?metadata.album_name():"")
+                       << ", length: " << metadata.track_length();
+    channel_->receive(this->shared_from_this());
+}
+
+void MediaStatusService::onPlaybackUpdate(const aasdk::proto::messages::MediaInfoChannelPlaybackData& playback)
+{
+    OPENAUTO_LOG(info) << "[MediaStatusService] Playback update"
+                       << ", source: " <<  playback.media_source()
+                       << ", state: " << playback.playback_state()
+                       << ", progress: " << playback.track_progress();
+    channel_->receive(this->shared_from_this());
+}
+
+
 }
 }
