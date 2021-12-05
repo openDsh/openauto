@@ -1,16 +1,17 @@
 #include "OpenautoLog.hpp"
 #include "openauto/Service/MediaStatusService.hpp"
+#include "openauto/Service/IAndroidAutoInterface.hpp"
 
 namespace openauto
 {
 namespace service
 {
 
-MediaStatusService::MediaStatusService(boost::asio::io_service& ioService, aasdk::messenger::IMessenger::Pointer messenger)
+MediaStatusService::MediaStatusService(boost::asio::io_service& ioService, aasdk::messenger::IMessenger::Pointer messenger, IAndroidAutoInterface* aa_interface)
     : strand_(ioService)
     , channel_(std::make_shared<aasdk::channel::av::MediaStatusServiceChannel>(strand_, std::move(messenger)))
 {
-
+    aa_interface_ = aa_interface;
 }
 
 void MediaStatusService::start()
@@ -66,6 +67,10 @@ void MediaStatusService::onMetadataUpdate(const aasdk::proto::messages::MediaInf
                        << (metadata.has_artist_name()?", artist: ":"") << (metadata.has_artist_name()?metadata.artist_name():"")
                        << (metadata.has_album_name()?", album: ":"") << (metadata.has_album_name()?metadata.album_name():"")
                        << ", length: " << metadata.track_length();
+    if(aa_interface_ != NULL)
+    {
+        aa_interface_->mediaMetadataUpdate(metadata);
+    }
     channel_->receive(this->shared_from_this());
 }
 
@@ -75,7 +80,16 @@ void MediaStatusService::onPlaybackUpdate(const aasdk::proto::messages::MediaInf
                        << ", source: " <<  playback.media_source()
                        << ", state: " << playback.playback_state()
                        << ", progress: " << playback.track_progress();
+    if(aa_interface_ != NULL)
+    {
+        aa_interface_->mediaPlaybackUpdate(playback);
+    }
     channel_->receive(this->shared_from_this());
+}
+
+void MediaStatusService::setAndroidAutoInterface(IAndroidAutoInterface* aa_interface)
+{
+    this->aa_interface_ = aa_interface;
 }
 
 

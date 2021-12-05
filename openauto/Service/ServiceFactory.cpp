@@ -31,7 +31,6 @@
 #include "openauto/Service/BluetoothService.hpp"
 #include "openauto/Service/InputService.hpp"
 #include "openauto/Service/NavigationStatusService.hpp"
-#include "openauto/Service/MediaStatusService.hpp"
 #include "openauto/Projection/QtVideoOutput.hpp"
 #include "openauto/Projection/GSTVideoOutput.hpp"
 #include "openauto/Projection/OMXVideoOutput.hpp"
@@ -42,12 +41,13 @@
 #include "openauto/Projection/LocalBluetoothDevice.hpp"
 #include "openauto/Projection/RemoteBluetoothDevice.hpp"
 #include "openauto/Projection/DummyBluetoothDevice.hpp"
+#include "openauto/Service/IAndroidAutoInterface.hpp"
+
 
 namespace openauto
 {
 namespace service
 {
-
 ServiceFactory::ServiceFactory(boost::asio::io_service& ioService, configuration::IConfiguration::Pointer configuration, QWidget *activeArea, std::function<void(bool)> activeCallback, bool nightMode)
     : ioService_(ioService)
     , configuration_(std::move(configuration))
@@ -64,6 +64,7 @@ ServiceFactory::ServiceFactory(boost::asio::io_service& ioService, configuration
     , btservice_(configuration_)
     , nightMode_(nightMode)
 {
+    OPENAUTO_LOG(info) << "SERVICE FACTORY INITED";
 
 }
 
@@ -82,7 +83,9 @@ ServiceList ServiceFactory::create(aasdk::messenger::IMessenger::Pointer messeng
     serviceList.emplace_back(this->createVideoService(messenger));
     serviceList.emplace_back(this->createBluetoothService(messenger));
     serviceList.emplace_back(this->createNavigationStatusService(messenger));
-    serviceList.emplace_back(this->createMediaStatusService(messenger));
+    std::shared_ptr<MediaStatusService> mediaStatusService = this->createMediaStatusService(messenger);
+    mediaStatusService_ = mediaStatusService;
+    serviceList.emplace_back(mediaStatusService);
 
     std::shared_ptr<InputService> inputService = this->createInputService(messenger);
     inputService_ = inputService;
@@ -138,9 +141,9 @@ IService::Pointer ServiceFactory::createNavigationStatusService(aasdk::messenger
     return std::make_shared<NavigationStatusService>(ioService_, messenger);
 }
 
-IService::Pointer ServiceFactory::createMediaStatusService(aasdk::messenger::IMessenger::Pointer messenger)
+std::shared_ptr<MediaStatusService> ServiceFactory::createMediaStatusService(aasdk::messenger::IMessenger::Pointer messenger)
 {
-    return std::make_shared<MediaStatusService>(ioService_, messenger);
+    return std::make_shared<MediaStatusService>(ioService_, messenger, aa_interface_);
 }
 
 std::shared_ptr<InputService> ServiceFactory::createInputService(aasdk::messenger::IMessenger::Pointer messenger)
@@ -232,6 +235,16 @@ void ServiceFactory::resize()
         qtVideoOutput_->resize();
     }
 #endif
+}
+void ServiceFactory::setAndroidAutoInterface(IAndroidAutoInterface* aa_interface){
+    if(aa_interface==NULL) return;
+    this->aa_interface_ = aa_interface;
+
+    if(std::shared_ptr<MediaStatusService> mediaStatusService = mediaStatusService_.lock())
+    {
+        mediaStatusService->setAndroidAutoInterface(aa_interface);
+    }
+
 }
 
 void ServiceFactory::setNightMode(bool nightMode)

@@ -25,11 +25,11 @@ namespace openauto
 {
 namespace service
 {
-
+class IAndroidAutoInterface;
 class MediaStatusService: public aasdk::channel::av::IMediaStatusServiceChannelEventHandler, public IService, public std::enable_shared_from_this<MediaStatusService>
 {
 public:
-    MediaStatusService(boost::asio::io_service& ioService, aasdk::messenger::IMessenger::Pointer messenger);
+    MediaStatusService(boost::asio::io_service& ioService, aasdk::messenger::IMessenger::Pointer messenger, IAndroidAutoInterface* aa_interface);
     void start() override;
     void stop() override;
     void fillFeatures(aasdk::proto::messages::ServiceDiscoveryResponse& response) override;
@@ -37,6 +37,7 @@ public:
     void onChannelError(const aasdk::error::Error& e) override;
     void onMetadataUpdate(const aasdk::proto::messages::MediaInfoChannelMetadataData& metadata) override;
     void onPlaybackUpdate(const aasdk::proto::messages::MediaInfoChannelPlaybackData& playback) override;
+    void setAndroidAutoInterface(IAndroidAutoInterface* aa_interface);
 
 
 private:
@@ -44,6 +45,7 @@ private:
 
     boost::asio::io_service::strand strand_;
     aasdk::channel::av::MediaStatusServiceChannel::Pointer channel_;
+    IAndroidAutoInterface* aa_interface_ = nullptr;
 };
 
 }

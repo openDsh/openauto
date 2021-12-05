@@ -24,6 +24,7 @@
 #include "openauto/Projection/OMXVideoOutput.hpp"
 #include "openauto/Projection/GSTVideoOutput.hpp"
 #include "openauto/Projection/QtVideoOutput.hpp"
+#include "openauto/Service/MediaStatusService.hpp"
 #include "openauto/Service/SensorService.hpp"
 #include "openauto/Service/InputService.hpp"
 #include "btservice/btservice.hpp"
@@ -32,7 +33,7 @@ namespace openauto
 {
 namespace service
 {
-
+class IAndroidAutoInterface;
 class ServiceFactory : public IServiceFactory
 {
 public:
@@ -43,6 +44,7 @@ public:
     void setNightMode(bool nightMode);
     void sendButtonPress(aasdk::proto::enums::ButtonCode::Enum buttonCode, projection::WheelDirection wheelDirection = projection::WheelDirection::NONE);
     void sendKeyEvent(QKeyEvent* event);
+    void setAndroidAutoInterface(IAndroidAutoInterface* aa_interface);
     static QRect mapActiveAreaToGlobal(QWidget* activeArea);
 #ifdef USE_OMX
     static projection::DestRect QRectToDestRect(QRect rect);
@@ -52,7 +54,7 @@ private:
     IService::Pointer createVideoService(aasdk::messenger::IMessenger::Pointer messenger);
     IService::Pointer createBluetoothService(aasdk::messenger::IMessenger::Pointer messenger);
     IService::Pointer createNavigationStatusService(aasdk::messenger::IMessenger::Pointer messenger);
-    IService::Pointer createMediaStatusService(aasdk::messenger::IMessenger::Pointer messenger);
+    std::shared_ptr<MediaStatusService> createMediaStatusService(aasdk::messenger::IMessenger::Pointer messenger);
     std::shared_ptr<InputService> createInputService(aasdk::messenger::IMessenger::Pointer messenger);
     void createAudioServices(ServiceList& serviceList, aasdk::messenger::IMessenger::Pointer messenger);
 
@@ -73,6 +75,8 @@ private:
     bool nightMode_;
     std::weak_ptr<SensorService> sensorService_;
     std::weak_ptr<InputService> inputService_;
+    std::weak_ptr<MediaStatusService> mediaStatusService_;
+    IAndroidAutoInterface* aa_interface_ = nullptr;
 };
 
 }

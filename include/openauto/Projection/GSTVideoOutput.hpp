@@ -71,7 +71,8 @@ signals:
 protected slots:
     void onStartPlayback();
     void onStopPlayback();
-
+public slots:
+    void dumpDot();
 private:
     static GstPadProbeReturn convertProbe(GstPad* pad, GstPadProbeInfo* info, void*);
     static gboolean busCallback(GstBus*, GstMessage* message, gpointer*);
