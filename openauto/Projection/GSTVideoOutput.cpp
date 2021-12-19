@@ -15,52 +15,16 @@
 *  You should have received a copy of the GNU General Public License
 *  along with openauto. If not, see <http://www.gnu.org/licenses/>.
 */
-#define USE_GST
 #ifdef USE_GST
 
 #include "aasdk/Common/Data.hpp"
 #include "openauto/Projection/GSTVideoOutput.hpp"
 #include "OpenautoLog.hpp"
-#include <QRunnable>
-#include <QTimer>
-
 
 namespace openauto
 {
 namespace projection
 {
-
-
-class SetPlaying : public QRunnable
-{
-public:
-  SetPlaying(GstElement *);
-  ~SetPlaying();
-
-  void run ();
-
-private:
-  GstElement * pipeline_;
-};
-
-SetPlaying::SetPlaying (GstElement * pipeline)
-{
-  this->pipeline_ = pipeline ? static_cast<GstElement *> (gst_object_ref (pipeline)) : NULL;
-}
-
-SetPlaying::~SetPlaying ()
-{
-  if (this->pipeline_)
-    gst_object_unref (this->pipeline_);
-}
-
-void
-SetPlaying::run ()
-{
-    qDebug()<<"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxrun";
-  if (this->pipeline_)
-    gst_element_set_state (this->pipeline_, GST_STATE_PLAYING);
-}
 
 
 GSTVideoOutput::GSTVideoOutput(configuration::IConfiguration::Pointer configuration, QWidget* videoContainer, std::function<void(bool)> activeCallback)
@@ -69,9 +33,14 @@ GSTVideoOutput::GSTVideoOutput(configuration::IConfiguration::Pointer configurat
     , activeCallback_(activeCallback)
 {
     this->moveToThread(QApplication::instance()->thread());
-
-    gst_init (nullptr, nullptr);
     videoWidget_ = new QQuickWidget(videoContainer_);
+
+    surface_ = new QGst::Quick::VideoSurface;
+    videoWidget_->rootContext()->setContextProperty(QLatin1String("videoSurface"), surface_);
+    videoWidget_->setSource(QUrl("qrc:/aa_video.qml"));
+    videoWidget_->setResizeMode(QQuickWidget::SizeRootObjectToView); 
+
+    videoSink_ = surface_->videoSink();
 
     GError* error = nullptr;
     const char* vidLaunchStr = "appsrc name=mysrc is-live=true block=false max-latency=100 do-timestamp=true stream-type=stream ! queue ! h264parse ! "
@@ -84,7 +53,7 @@ GSTVideoOutput::GSTVideoOutput(configuration::IConfiguration::Pointer configurat
         #else
                                "avdec_h264 ! "
         #endif
-                                " glupload "/*videocrop top=0 bottom=0 name=videocropper ! */"! glcolorconvert name=myglupload";
+                                "videocrop top=0 bottom=0 name=videocropper ! capsfilter caps=video/x-raw name=mycapsfilter";
     #ifdef RPI
         OPENAUTO_LOG(info) << "[GSTVideoOutput] RPI Build, running with " <<
         #ifdef PI4
@@ -99,32 +68,14 @@ GSTVideoOutput::GSTVideoOutput(configuration::IConfiguration::Pointer configurat
     gst_bus_add_watch(bus, (GstBusFunc)&GSTVideoOutput::busCallback, this);
     gst_object_unref(bus);
 
+    GstElement* sink = QGlib::RefPointer<QGst::Element>(videoSink_);
+    g_object_set(sink, "force-aspect-ratio", false, nullptr);
+    g_object_set(sink, "sync", false, nullptr);
+    g_object_set(sink, "async", false, nullptr);
 
-
-    /* the plugin must be loaded before loading the qml file to register the
-     * GstGLVideoItem qml item */
-    GstElement *sink = gst_element_factory_make ("qmlglsink", NULL);
-
-    videoWidget_->setSource(QUrl("qrc:/aa_video.qml"));
-    videoWidget_->setResizeMode(QQuickWidget::SizeRootObjectToView);
-
-
-
-
-    // g_object_set(sink, "force-aspect-ratio", false, nullptr);
-    // g_object_set(sink, "sync", false, nullptr);
-    // g_object_set(sink, "async", false, nullptr);
-
-    QQuickItem *videoItem;
-
-    videoItem = videoWidget_->rootObject();
-    g_assert (videoItem);
-    g_object_set(sink, "widget", videoItem, NULL);
-
-
-    GstElement* glupload = gst_bin_get_by_name(GST_BIN(vidPipeline_), "myglupload");
+    GstElement* capsFilter = gst_bin_get_by_name(GST_BIN(vidPipeline_), "mycapsfilter");
     gst_bin_add(GST_BIN(vidPipeline_), GST_ELEMENT(sink));
-    gst_element_link(glupload, GST_ELEMENT(sink));
+    gst_element_link(capsFilter, GST_ELEMENT(sink));
 
     vidSrc_ = GST_APP_SRC(gst_bin_get_by_name(GST_BIN(vidPipeline_), "mysrc"));
     gst_app_src_set_stream_type(vidSrc_, GST_APP_STREAM_TYPE_STREAM);
@@ -133,9 +84,6 @@ GSTVideoOutput::GSTVideoOutput(configuration::IConfiguration::Pointer configurat
 
     connect(this, &GSTVideoOutput::startPlayback, this, &GSTVideoOutput::onStartPlayback, Qt::QueuedConnection);
     connect(this, &GSTVideoOutput::stopPlayback, this, &GSTVideoOutput::onStopPlayback, Qt::QueuedConnection);
-    QQuickWindow *rootObject;
-
-
 }
 
 GSTVideoOutput::~GSTVideoOutput()
@@ -177,24 +125,13 @@ gboolean GSTVideoOutput::busCallback(GstBus*, GstMessage* message, gpointer*)
     return TRUE;
 }
 
-
-void GSTVideoOutput::dumpDot(){
-    
-    gst_debug_bin_to_dot_file(GST_BIN(vidPipeline_), GST_DEBUG_GRAPH_SHOW_VERBOSE, "pipeline");
-        OPENAUTO_LOG(info) << "[GSTVideoOutput] Dumped dot debug info";
-
-}
-
 bool GSTVideoOutput::open()
 {
     GstElement* capsFilter = gst_bin_get_by_name(GST_BIN(vidPipeline_), "mycapsfilter");
     GstPad* convertPad = gst_element_get_static_pad(capsFilter, "sink");
     gst_pad_add_probe(convertPad, GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM, &GSTVideoOutput::convertProbe, this, nullptr);
+    gst_element_set_state(vidPipeline_, GST_STATE_PLAYING);
 
-    QQuickWindow *rootObject = videoWidget_->quickWindow();
-
-    // rootObject->scheduleRenderJob (new SetPlaying (vidPipeline_),
-    //    QQuickWindow::BeforeSynchronizingStage);
     return true;
 }
 
@@ -260,10 +197,6 @@ void GSTVideoOutput::onStartPlayback()
         videoWidget_->resize(videoContainer_->size());
     }
     videoWidget_->show();
-    gst_element_set_state(vidPipeline_, GST_STATE_PLAYING);
-    QTimer::singleShot(5 * 1000, this, SLOT(dumpDot()));
-
-
 }
 
 void GSTVideoOutput::stop()

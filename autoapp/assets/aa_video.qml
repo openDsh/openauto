@@ -1,11 +1,9 @@
-import QtQuick 2.4
+import QtQuick 2.0
+import QtGStreamer 1.0
 
-import org.freedesktop.gstreamer.GLVideoItem 1.0
-
-GstGLVideoItem {
-    id: video
-    objectName: "videoItem"
-    anchors.centerIn: parent
-    width: 500
-    height: 500
+VideoItem {
+      id: aaVideo
+      width: 300
+      height: 300
+      surface: videoSurface
 }
