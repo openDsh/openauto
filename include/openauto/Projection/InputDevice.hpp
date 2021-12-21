@@ -22,6 +22,7 @@
 #include <QKeyEvent>
 #include "IInputDevice.hpp"
 #include "openauto/Configuration/IConfiguration.hpp"
+#include <bits/stdc++.h>
 
 namespace openauto
 {
@@ -48,6 +49,7 @@ private:
     bool handleKeyEvent(QEvent* event, QKeyEvent* key);
     void dispatchKeyEvent(ButtonEvent event);
     bool handleTouchEvent(QEvent* event);
+    bool handleMouseEvent(QEvent* event);
 
     QObject& parent_;
     configuration::IConfiguration::Pointer configuration_;
@@ -55,6 +57,10 @@ private:
     QRect displayGeometry_;
     IInputDeviceEventHandler* eventHandler_;
     std::mutex mutex_;
+
+    std::priority_queue <int, std::vector<int>, std::greater<int> > pointer_id_queue;
+    QMap<int, int> pointer_map;
+    int max_pointers = 0;
 };
 
 }

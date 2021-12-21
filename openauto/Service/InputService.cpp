@@ -178,7 +178,18 @@ void InputService::sendButtonPress(aasdk::proto::enums::ButtonCode::Enum buttonC
     }
 }
 
-void InputService::onTouchEvent(const projection::TouchEvent& event)
+void InputService::onTouchEvent(aasdk::proto::messages::InputEventIndication inputEventIndication)
+{
+
+    strand_.dispatch([this, self = this->shared_from_this(), inputEventIndication = std::move(inputEventIndication)]() {
+
+        auto promise = aasdk::channel::SendPromise::defer(strand_);
+        promise->then([]() {}, std::bind(&InputService::onChannelError, this->shared_from_this(), std::placeholders::_1));
+        channel_->sendInputEventIndication(inputEventIndication, std::move(promise));
+    });
+}
+
+void InputService::onMouseEvent(const projection::TouchEvent& event)
 {
     auto timestamp = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch());
 

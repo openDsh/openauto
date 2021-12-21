@@ -19,6 +19,7 @@
 #include "OpenautoLog.hpp"
 #include "openauto/Projection/IInputDeviceEventHandler.hpp"
 #include "openauto/Projection/InputDevice.hpp"
+#include <QDebug>
 
 namespace openauto
 {
@@ -33,6 +34,7 @@ InputDevice::InputDevice(QObject& parent, configuration::IConfiguration::Pointer
     , eventHandler_(nullptr)
 {
     this->moveToThread(parent.thread());
+    pointer_id_queue.push(INT_MAX);
 }
 
 void InputDevice::start(IInputDeviceEventHandler& eventHandler)
@@ -67,9 +69,13 @@ bool InputDevice::eventFilter(QObject* obj, QEvent* event)
                 return this->handleKeyEvent(event, key);
             }
         }
-        else if(event->type() == QEvent::MouseButtonPress || event->type() == QEvent::MouseButtonRelease || event->type() == QEvent::MouseMove)
+        else if(event->type() == QEvent::TouchBegin || event->type() == QEvent::TouchUpdate || event->type() == QEvent::TouchEnd || event->type() == QEvent::TouchCancel)
         {
             return this->handleTouchEvent(event);
+        }
+        else if(event->type() == QEvent::MouseButtonPress || event->type() == QEvent::MouseButtonRelease || event->type() == QEvent::MouseMove)
+        {
+            return this->handleMouseEvent(event);
         }
     }
 
@@ -175,8 +181,82 @@ bool InputDevice::handleKeyEvent(QEvent* event, QKeyEvent* key)
 
     return true;
 }
-
 bool InputDevice::handleTouchEvent(QEvent* event)
+{
+    if(!configuration_->getTouchscreenEnabled())
+    {
+        return true;
+    }
+
+    
+    QTouchEvent* qtTouchEvent = static_cast<QTouchEvent*>(event);
+    aasdk::proto::enums::TouchAction::Enum type;
+    auto timestamp = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch());
+    aasdk::proto::messages::InputEventIndication inputEventIndication;
+    inputEventIndication.set_timestamp(timestamp.count());
+    auto touchEvent = inputEventIndication.mutable_touch_event();
+    switch(event->type()){
+        case QEvent::TouchBegin:
+            type = aasdk::proto::enums::TouchAction::PRESS;
+            break;
+        case QEvent::TouchUpdate:
+            if(qtTouchEvent->touchPointStates().testFlag(Qt::TouchPointPressed)) type = aasdk::proto::enums::TouchAction::POINTER_DOWN;
+            else if(qtTouchEvent->touchPointStates().testFlag(Qt::TouchPointReleased)) type = aasdk::proto::enums::TouchAction::POINTER_UP;
+            else{
+                type = aasdk::proto::enums::TouchAction::DRAG;
+                touchEvent->set_action_index(0);
+            }
+            break;
+        case QEvent::TouchEnd:
+            type = aasdk::proto::enums::TouchAction::RELEASE;
+            break;
+        case QEvent::TouchCancel:
+            type = aasdk::proto::enums::TouchAction::RELEASE;
+        default:
+            return true;
+    }
+
+    touchEvent->set_touch_action(type);
+
+    auto pointers = qtTouchEvent->touchPoints();
+
+    // What's with this pointer map and pointer id queue?
+    // Pointers get a unique id during their lifespan, and android auto gets pissy when you try and just use the unique id qt assigns
+    // but it's happier with smaller valued ids
+    // and since there are no garuntees about id range, or similar (because of drivers and whatnot)
+    // pointer id queue is a min heap, with the first item being the next availible "smaller id"
+    // and pointer maps stores the qt id: small id relation
+    // the pointer id queue will expand as needed
+
+    // I kinda hate this, but it works
+    
+    for(int i=0; i<pointers.count(); i++)
+    {
+        if(pointers[i].state() == Qt::TouchPointPressed){
+            touchEvent->set_action_index(i);
+            if(pointer_id_queue.top() == INT_MAX){
+                pointer_id_queue.push(max_pointers++);
+            }
+            pointer_map.insert(pointers[i].id(), pointer_id_queue.top());
+            pointer_id_queue.pop();
+        }
+        else if(pointers[i].state() == Qt::TouchPointReleased){
+            touchEvent->set_action_index(i);
+            pointer_id_queue.push(pointer_map.take(pointers[i].id()));
+        }
+        
+        auto touchLocation = touchEvent->add_touch_location();
+        touchLocation->set_x((static_cast<float>(pointers[i].pos().x()) / touchscreenGeometry_.width()) * displayGeometry_.width());
+        touchLocation->set_y((static_cast<float>(pointers[i].pos().y()) / touchscreenGeometry_.height()) * displayGeometry_.height());
+        touchLocation->set_pointer_id(pointer_map[pointers[i].id()]);
+    }
+
+    eventHandler_->onTouchEvent(inputEventIndication);
+
+    return true;
+
+}
+bool InputDevice::handleMouseEvent(QEvent* event)
 {
     if(!configuration_->getTouchscreenEnabled())
     {
@@ -205,7 +285,7 @@ bool InputDevice::handleTouchEvent(QEvent* event)
     {
         const uint32_t x = (static_cast<float>(mouse->pos().x()) / touchscreenGeometry_.width()) * displayGeometry_.width();
         const uint32_t y = (static_cast<float>(mouse->pos().y()) / touchscreenGeometry_.height()) * displayGeometry_.height();
-        eventHandler_->onTouchEvent({type, x, y, 0});
+        eventHandler_->onMouseEvent({type, x, y, 0});
     }
 
     return true;

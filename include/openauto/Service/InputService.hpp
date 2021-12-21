@@ -46,7 +46,8 @@ public:
     void onBindingRequest(const aasdk::proto::messages::BindingRequest& request) override;
     void onChannelError(const aasdk::error::Error& e) override;
     void onButtonEvent(const projection::ButtonEvent& event) override;
-    void onTouchEvent(const projection::TouchEvent& event) override;
+    void onTouchEvent(aasdk::proto::messages::InputEventIndication inputEventIndication) override;
+    void onMouseEvent(const projection::TouchEvent& event) override;
 
 private:
     using std::enable_shared_from_this<InputService>::shared_from_this;
