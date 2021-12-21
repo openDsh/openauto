@@ -55,6 +55,15 @@ public:
             m_serviceFactory->sendButtonPress(buttonCode, wheelDirection);
         }
     }
+    void setNightMode(bool mode)
+    {
+        if(m_serviceFactory != NULL)
+        {
+            
+            m_serviceFactory->setNightMode(mode);
+        }
+    }
+    
 
 
 
