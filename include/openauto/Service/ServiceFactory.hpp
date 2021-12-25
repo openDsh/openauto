@@ -42,7 +42,7 @@ public:
     void setOpacity(unsigned int alpha);
     void resize();
     void setNightMode(bool nightMode);
-    void sendButtonPress(aasdk::proto::enums::ButtonCode::Enum buttonCode, projection::WheelDirection wheelDirection = projection::WheelDirection::NONE);
+    void sendButtonPress(aasdk::proto::enums::ButtonCode::Enum buttonCode, projection::WheelDirection wheelDirection = projection::WheelDirection::NONE, projection::ButtonEventType buttonEventType = projection::ButtonEventType::NONE);
     void sendKeyEvent(QKeyEvent* event);
     void setAndroidAutoInterface(IAndroidAutoInterface* aa_interface);
     static QRect mapActiveAreaToGlobal(QWidget* activeArea);

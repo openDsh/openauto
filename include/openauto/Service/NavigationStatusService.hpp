@@ -19,6 +19,7 @@
 #pragma once
 
 #include "aasdk/Channel/Navigation/NavigationStatusServiceChannel.hpp"
+#include "IAndroidAutoInterface.hpp"
 #include "IService.hpp"
 
 namespace openauto
@@ -35,12 +36,19 @@ public:
     void fillFeatures(aasdk::proto::messages::ServiceDiscoveryResponse& response) override;
     void onChannelOpenRequest(const aasdk::proto::messages::ChannelOpenRequest& request) override;
     void onChannelError(const aasdk::error::Error& e) override;
+    void onTurnEvent(const aasdk::proto::messages::NavigationTurnEvent& turnEvent) override;
+    void onDistanceEvent(const aasdk::proto::messages::NavigationDistanceEvent& distanceEvent) override;
+    void onStatusUpdate(const aasdk::proto::messages::NavigationStatus& navStatus) override;
+    void setAndroidAutoInterface(IAndroidAutoInterface* aa_interface);
+
 
 private:
     using std::enable_shared_from_this<NavigationStatusService>::shared_from_this;
 
     boost::asio::io_service::strand strand_;
     aasdk::channel::navigation::NavigationStatusServiceChannel::Pointer channel_;
+    IAndroidAutoInterface* aa_interface_ = nullptr;
+
 };
 
 }

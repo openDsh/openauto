@@ -229,7 +229,7 @@ bool InputDevice::handleTouchEvent(QEvent* event)
     // the pointer id queue will expand as needed
 
     // I kinda hate this, but it works
-    
+
     for(int i=0; i<pointers.count(); i++)
     {
         if(pointers[i].state() == Qt::TouchPointPressed){

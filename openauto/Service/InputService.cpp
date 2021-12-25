@@ -163,7 +163,7 @@ void InputService::onButtonEvent(const projection::ButtonEvent& event)
     });
 }
 
-void InputService::sendButtonPress(aasdk::proto::enums::ButtonCode::Enum buttonCode, projection::WheelDirection wheelDirection)
+void InputService::sendButtonPress(aasdk::proto::enums::ButtonCode::Enum buttonCode, projection::WheelDirection wheelDirection, projection::ButtonEventType buttonEventType)
 {    
     OPENAUTO_LOG(info) << "[InputService] injecting button press";
     if(buttonCode == aasdk::proto::enums::ButtonCode::SCROLL_WHEEL)
@@ -173,8 +173,14 @@ void InputService::sendButtonPress(aasdk::proto::enums::ButtonCode::Enum buttonC
     }
     else
     {
-        onButtonEvent({projection::ButtonEventType::PRESS, projection::WheelDirection::NONE, buttonCode});
-        onButtonEvent({projection::ButtonEventType::RELEASE, projection::WheelDirection::NONE, buttonCode});
+        if(buttonEventType == projection::ButtonEventType::NONE){
+            onButtonEvent({projection::ButtonEventType::PRESS, projection::WheelDirection::NONE, buttonCode});
+            onButtonEvent({projection::ButtonEventType::RELEASE, projection::WheelDirection::NONE, buttonCode});
+        }
+        else
+        {
+            onButtonEvent({buttonEventType, projection::WheelDirection::NONE, buttonCode});
+        }
     }
 }
 

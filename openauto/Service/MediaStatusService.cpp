@@ -35,7 +35,6 @@ void MediaStatusService::fillFeatures(aasdk::proto::messages::ServiceDiscoveryRe
 
     auto* channelDescriptor = response.add_channels();
     channelDescriptor->set_channel_id(static_cast<uint32_t>(channel_->getId()));
-    auto mediaStatusChannel = channelDescriptor->mutable_media_infochannel();
 }
 
 void MediaStatusService::onChannelOpenRequest(const aasdk::proto::messages::ChannelOpenRequest& request)
