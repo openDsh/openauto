@@ -92,6 +92,13 @@ GSTVideoOutput::~GSTVideoOutput()
     gst_object_unref(vidSrc_);
 }
 
+void GSTVideoOutput::dumpDot(){
+    
+    gst_debug_bin_to_dot_file(GST_BIN(vidPipeline_), GST_DEBUG_GRAPH_SHOW_VERBOSE, "pipeline");
+        OPENAUTO_LOG(info) << "[GSTVideoOutput] Dumped dot debug info";
+
+}
+
 gboolean GSTVideoOutput::busCallback(GstBus*, GstMessage* message, gpointer*)
 {
     gchar* debug;
@@ -197,6 +204,7 @@ void GSTVideoOutput::onStartPlayback()
         videoWidget_->resize(videoContainer_->size());
     }
     videoWidget_->show();
+    dumpDot();
 }
 
 void GSTVideoOutput::stop()
@@ -268,6 +276,9 @@ void GSTVideoOutput::resize()
     g_object_set(vidCrop_, "left", (int)marginWidth, nullptr);
     g_object_set(vidCrop_, "right", (int)marginWidth, nullptr);
     this->configuration_->setVideoMargins(QRect(0,0,(int)(marginWidth*2), (int)(marginHeight*2)));
+
+        OPENAUTO_LOG(info) << "[GSTVideoOutput] video isVisible "<< videoWidget_->isVisible() << " container isVisible "<<videoContainer_->isVisible();
+
 }
 
 }
