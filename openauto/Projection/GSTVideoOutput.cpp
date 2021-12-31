@@ -20,6 +20,7 @@
 #include "aasdk/Common/Data.hpp"
 #include "openauto/Projection/GSTVideoOutput.hpp"
 #include "OpenautoLog.hpp"
+#include <QTimer>
 
 namespace openauto
 {
@@ -204,7 +205,7 @@ void GSTVideoOutput::onStartPlayback()
         videoWidget_->resize(videoContainer_->size());
     }
     videoWidget_->show();
-    dumpDot();
+    QTimer::singleShot(10000, this, SLOT(dumpDot()));
 }
 
 void GSTVideoOutput::stop()
