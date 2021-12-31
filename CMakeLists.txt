@@ -1,16 +1,17 @@
 cmake_minimum_required(VERSION 3.5.1)
 
-set (OPENAUTO_VERSION_MAJOR 2)
-set (OPENAUTO_VERSION_MINOR 1)
+set (openauto_VERSION_MAJOR 2)
+set (openauto_VERSION_MINOR 1)
+set (openauto_VERSION_PATCH 0)
 
 project(openauto 
-LANGUAGES CXX)							  
+VERSION ${openauto_VERSION_MAJOR}.${openauto_VERSION_MINOR}.${openauto_VERSION_PATCH}
+LANGUAGES CXX)
+
 find_program(CCACHE_PROGRAM ccache)
 if(CCACHE_PROGRAM)
     set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${CCACHE_PROGRAM}")
 endif()
-
-project(openauto CXX)
 
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
@@ -85,8 +86,11 @@ add_subdirectory(openauto)
 add_subdirectory(autoapp)
 add_dependencies(autoapp btservice_proto)
 
-set (OPENAUTO_VERSION_PATCH ${_commit_timestamp})
-set (OPENAUTO_VERSION_STRING ${OPENAUTO_VERSION_MAJOR}.${OPENAUTO_VERSION_MINOR}.${OPENAUTO_VERSION_PATCH})
+set (openauto_VERSION_PATCH ${_build_version})
+set (openauto_VERSION_STRING ${openauto_VERSION_MAJOR}.${openauto_VERSION_MINOR}.${openauto_VERSION_PATCH})
+set_target_properties(openauto PROPERTIES VERSION ${openauto_VERSION_STRING}
+                                          SOVERSION ${openauto_VERSION_MAJOR})
+message(INFO " Project Version: ${openauto_VERSION_STRING}")
 
 install(DIRECTORY lib DESTINATION lib COMPONENT libraries)
 install(DIRECTORY include DESTINATION include COMPONENT headers)
@@ -95,7 +99,7 @@ install(DIRECTORY bin DESTINATION bin COMPONENT applications)
 SET(CPACK_GENERATOR "DEB")
 SET(CPACK_DEBIAN_PACKAGE_MAINTAINER "OpenDsh") #required
 SET(CPACK_PACKAGE_VENDOR "OpenDsh") 
-SET(CPACK_PACKAGE_VERSION ${OPENAUTO_VERSION_STRING})
+set(CPACK_PACKAGE_VERSION ${openauto_VERSION_STRING})
 set(CPACK_DEBIAN_FILE_NAME DEB-DEFAULT)
 set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
 set(CPACK_COMPONENTS_ALL applications libraries headers Unspecified)
