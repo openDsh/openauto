@@ -76,3 +76,4 @@ void btservice::connectToBluetooth(QBluetoothAddress addr, QBluetoothAddress con
 #endif
 }
 }
+}
