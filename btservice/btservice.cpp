@@ -50,20 +50,21 @@ void btservice::connectToBluetooth(QBluetoothAddress addr, QBluetoothAddress con
     // Other computers with more sane bluetooth shouldn't have an issue using bluetoothctl
 
     // Update 01-10-21, latest firmware/package updates seem to have made bluetoothctl more stable
-    // and it won't drop a connection anymore. At least on a Pi4
-    // Why don't we just use rfcomm? Because an rfcomm initiated connection breaks bluetooth HFP, which breaks the use of
-    // pi mic/speakers for android auto phone calls. bluetoothctl does not do this.
+    // and it won't drop a connection anymore. Only issue, is that the connection will fail
+    // if the desired target hasn't been "seen" yet
+    // we can use hcitool to force the pi to recognize that we're trying to connect to a valid device.
+    // this causes the target device to be "seen"
+    // bluetoothctl can then connect as normal.
+    // Why don't we just use rfcomm (as we had previously on pis)? Because an rfcomm initiated connection doesn't connect HFP, which breaks the use of
+    // pi mic/speakers for android auto phone calls. bluetoothctl will connect all profiles.
     
-#ifndef PI4
-    #ifdef RPI
-    // tries to open an rfcomm serial on channel 2
-    // channel doesn't really matter here, 2 is just "somewhat standard"
-    QString program = QString::fromStdString("sudo stdbuf -oL rfcomm connect hci0 ")+addr.toString()+QString::fromStdString(" 2");
+#ifdef RPI
+    QString program = QString::fromStdString("sudo hcitool cc ")+addr.toString();
     btConnectProcess = new QProcess();
-    OPENAUTO_LOG(info)<<"[btservice] Attempting to connect to last bluetooth device, "<<addr.toString().toStdString()<<" with `"<<program.toStdString();
+    OPENAUTO_LOG(info)<<"[btservice] Attempting to connect to last bluetooth device, "<<addr.toString().toStdString()<<" using hcitool/bluetoothctl hybrid";
     btConnectProcess->start(program, QProcess::Unbuffered | QProcess::ReadWrite);
-    #endif
-#else
+    btConnectProcess->waitForFinished();
+#endif
     btConnectProcess = new QProcess();
     btConnectProcess->setProcessChannelMode(QProcess::SeparateChannels);
     OPENAUTO_LOG(info)<<"[btservice] Attempting to connect to last bluetooth device, "<<addr.toString().toStdString()<<" with bluetoothctl";
@@ -73,7 +74,6 @@ void btservice::connectToBluetooth(QBluetoothAddress addr, QBluetoothAddress con
     btConnectProcess->write(QString("connect %1\n").arg(addr.toString()).toUtf8());
     btConnectProcess->closeWriteChannel();
     btConnectProcess->waitForFinished();
-#endif
 }
 }
 }
