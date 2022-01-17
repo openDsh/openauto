@@ -3,17 +3,18 @@
 #include "aasdk_proto/ManeuverTypeEnum.pb.h"
 #include "aasdk_proto/ManeuverDirectionEnum.pb.h"
 #include "aasdk_proto/DistanceUnitEnum.pb.h"
+#include "openauto/Service/IAndroidAutoInterface.hpp"
 
 namespace openauto
 {
 namespace service
 {
 
-NavigationStatusService::NavigationStatusService(boost::asio::io_service& ioService, aasdk::messenger::IMessenger::Pointer messenger)
+NavigationStatusService::NavigationStatusService(boost::asio::io_service& ioService, aasdk::messenger::IMessenger::Pointer messenger, IAndroidAutoInterface* aa_interface)
     : strand_(ioService)
     , channel_(std::make_shared<aasdk::channel::navigation::NavigationStatusServiceChannel>(strand_, std::move(messenger)))
 {
-
+    this->aa_interface_ = aa_interface;
 }
 
 void NavigationStatusService::start()

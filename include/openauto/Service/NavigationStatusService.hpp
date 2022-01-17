@@ -19,18 +19,17 @@
 #pragma once
 
 #include "aasdk/Channel/Navigation/NavigationStatusServiceChannel.hpp"
-#include "IAndroidAutoInterface.hpp"
 #include "IService.hpp"
 
 namespace openauto
 {
 namespace service
 {
-
+class IAndroidAutoInterface;
 class NavigationStatusService: public aasdk::channel::navigation::INavigationStatusServiceChannelEventHandler, public IService, public std::enable_shared_from_this<NavigationStatusService>
 {
 public:
-    NavigationStatusService(boost::asio::io_service& ioService, aasdk::messenger::IMessenger::Pointer messenger);
+    NavigationStatusService(boost::asio::io_service& ioService, aasdk::messenger::IMessenger::Pointer messenger, IAndroidAutoInterface* aa_interface);
     void start() override;
     void stop() override;
     void fillFeatures(aasdk::proto::messages::ServiceDiscoveryResponse& response) override;

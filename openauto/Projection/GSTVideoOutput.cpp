@@ -277,9 +277,6 @@ void GSTVideoOutput::resize()
     g_object_set(vidCrop_, "left", (int)marginWidth, nullptr);
     g_object_set(vidCrop_, "right", (int)marginWidth, nullptr);
     this->configuration_->setVideoMargins(QRect(0,0,(int)(marginWidth*2), (int)(marginHeight*2)));
-
-        OPENAUTO_LOG(info) << "[GSTVideoOutput] video isVisible "<< videoWidget_->isVisible() << " container isVisible "<<videoContainer_->isVisible();
-
 }
 
 }
