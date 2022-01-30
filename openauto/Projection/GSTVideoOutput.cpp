@@ -22,6 +22,7 @@
 #include "OpenautoLog.hpp"
 #include "h264_stream.h"
 #include <QTimer>
+// these are needed only for pretty printing of data, to be removed
 #include <sstream>
 #include <string>
 #include <iostream>
@@ -191,13 +192,8 @@ void GSTVideoOutput::write(uint64_t timestamp, const aasdk::common::DataConstBuf
 
         // Raspberry Pi hardware h264 decode appears broken if video_signal_type VUI parameters are given in the h264 header
         // And we don't have control over Android Auto putting these parameters in (which it does.. on some model phones)
-        // And editing this header on the fly would require me either writing an h264 parser (gross)
-        // or pulling one in as a library (gross) - Because h264 headers are dynamically sized based on what they contain,
-        // and the data isn't guaranteed to be aligned (so we can't just toss out a few bytes).
-
-        // So... just replace the whole first header with a known good one (which from my testing, appears
-        // identical to a "bad" one but without the video_signal_type VUI parameters)
-
+        // So we pull in h264bitstream to edit this header on the fly
+        
         // This is not a fix, I want to be very clear about that. I don't know what else I'm breaking, or run the 
         // risk of breaking by doing this. This code should only remain here as long as the Pi Engineers haven't released
         // a firmware/driver fix for this yet.
@@ -208,22 +204,25 @@ void GSTVideoOutput::write(uint64_t timestamp, const aasdk::common::DataConstBuf
         // then we try to find the second and save the data it contains, while replacing the first.
         
         // This header should also always be within the first video message we receive from a device... I think
-
-        // This sequence was taken from a Pixel 3A, and appears identical to the "bad" device I have on hand
-        // (a Samsung S21 Ultra) except for the previously stated settings
         
         std::vector<uint8_t> delimit_sequence{0x00, 0x00, 0x00, 0x01};
-        std::vector<uint8_t> incoming_buffer(&buffer.cdata[0], &buffer.cdata[buffer.size]);
         std::vector<uint8_t>::iterator sequence_split;
+        std::vector<uint8_t> incoming_buffer(&buffer.cdata[0], &buffer.cdata[buffer.size]);
 
         int nal_start, nal_end;
         uint8_t* buf = (uint8_t *) buffer.cdata;
         int len = buffer.size;
-        // read some H264 data into buf
         h264_stream_t* h = h264_new();
+        // finds the first NAL packet
         find_nal_unit(buf, len, &nal_start, &nal_end);
+        // prases it
         read_nal_unit(h, &buf[nal_start], nal_end - nal_start);
+        // prints it
         debug_nal(h,h->nal);
+        // wipe all the color description stuff that breaks Pis
+        h->sps->vui.video_signal_type_present_flag = 0x00;
+        h->sps->vui.video_format = 0x00;
+        h->sps->vui.video_full_range_flag = 0x00;
         h->sps->vui.colour_description_present_flag = 0x00;
         h->sps->vui.video_format = 0x00;
         h->sps->vui.video_full_range_flag = 0x00;
@@ -232,15 +231,19 @@ void GSTVideoOutput::write(uint64_t timestamp, const aasdk::common::DataConstBuf
         h->sps->vui.transfer_characteristics = 0x00;
         h->sps->vui.matrix_coefficients = 0x00;
 
-        
+        // grab some storage
         uint8_t* out_buf = new uint8_t[30];
 
+        // write it to the storage's 3rd index, because h264bitstream seems to have a bug
+        // where it both doesn't write the delimiter, and it prepends a leading 0x00
         len = write_nal_unit(h, &out_buf[3], 30) + 3;
+        // write the delimiter back
         out_buf[0] = 0x00;
         out_buf[1] = 0x00;
         out_buf[2] = 0x00;
         out_buf[3] = 0x01;
 
+        // just printing stuff so I can make sure this actually removes the bytes and doesn't just zero them
         std::stringstream ss;
         ss << std::hex << std::setfill('0');
 
@@ -250,6 +253,7 @@ void GSTVideoOutput::write(uint64_t timestamp, const aasdk::common::DataConstBuf
         }
         OPENAUTO_LOG(info) << "NEW HEADER "<<ss.str();
 
+        // output to gstreamer
         GstBuffer* buffer_ = gst_buffer_new_and_alloc(len);
         gst_buffer_fill(buffer_, 0, out_buf, len);
         int ret = gst_app_src_push_buffer((GstAppSrc*)vidSrc_, buffer_);
