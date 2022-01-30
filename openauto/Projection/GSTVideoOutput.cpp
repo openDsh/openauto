@@ -205,15 +205,31 @@ void GSTVideoOutput::write(uint64_t timestamp, const aasdk::common::DataConstBuf
 
         // This sequence was taken from a Pixel 3A, and appears identical to the "bad" device I have on hand
         // (a Samsung S21 Ultra) except for the previously stated settings
-        std::vector<uint8_t> good_header_data{ 0x00, 0x00, 0x00, 0x01, 0x67, 0x42, 0x80, 0x1f, 0xda, 0x03, 0x20, 0xf6, 0x80, 0x6d, 0x0a, 0x13, 0x50};
+        std::vector<uint8_t> good_header_data_480{0x00, 0x00, 0x00, 0x01, 0x67, 0x42, 0x80, 0x1f, 0xda, 0x03, 0x20, 0xf6, 0x80, 0x6d, 0x0a, 0x13, 0x50};
+        std::vector<uint8_t> good_header_data_720{0x00, 0x00, 0x00, 0x01, 0x67, 0x42, 0x80, 0x1F, 0xDA, 0x01, 0x40, 0x16, 0xE8, 0x06, 0xD0, 0xA1, 0x35};
+        std::vector<uint8_t> good_header_data_1080{0x00, 0x00, 0x00, 0x01, 0x67, 0x42, 0x80, 0x28, 0xDA, 0x01, 0xE0, 0x08, 0x9F, 0x96, 0x01, 0xB4, 0x28, 0x4D, 0x40};
+
         std::vector<uint8_t> delimit_sequence{0x00, 0x00, 0x00, 0x01};
         std::vector<uint8_t> incoming_buffer(&buffer.cdata[0], &buffer.cdata[buffer.size]);
         size_t incoming_buffer_size = buffer.size;
         std::vector<uint8_t>::iterator sequence_split;
+        std::vector<uint8_t> good_header_data;
 
+        switch(this->configuration_->getVideoResolution())
+        {
+            case(aasdk::proto::enums::VideoResolution::_480p):
+                good_header_data = good_header_data_480;
+                break;
+            case(aasdk::proto::enums::VideoResolution::_720p):
+                good_header_data = good_header_data_720;
+                break;
+            case(aasdk::proto::enums::VideoResolution::_1080p):
+                good_header_data = good_header_data_1080;
+                break;
+        }
         // First inject the good header
-        GstBuffer* buffer_ = gst_buffer_new_and_alloc(17);
-        gst_buffer_fill(buffer_, 0, good_header_data.data(), 17);
+        GstBuffer* buffer_ = gst_buffer_new_and_alloc(good_header_data.size());
+        gst_buffer_fill(buffer_, 0, good_header_data.data(), good_header_data.size());
         int ret = gst_app_src_push_buffer((GstAppSrc*)vidSrc_, buffer_);
         if(ret != GST_FLOW_OK)
         {
