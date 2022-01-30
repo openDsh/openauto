@@ -176,17 +176,83 @@ bool GSTVideoOutput::init()
 
 void GSTVideoOutput::write(uint64_t timestamp, const aasdk::common::DataConstBuffer& buffer)
 {
-    GstBuffer* buffer_ = gst_buffer_new_and_alloc(buffer.size);
-    gst_buffer_fill(buffer_, 0, buffer.cdata, buffer.size);
-    int ret = gst_app_src_push_buffer((GstAppSrc*)vidSrc_, buffer_);
-    if(ret != GST_FLOW_OK)
+    if(!firstHeaderParsed)
     {
-        OPENAUTO_LOG(info) << "[GSTVideoOutput] push buffer returned " << ret << " for " << buffer.size << "bytes";
+        // I really really really hate this.
+        // I don't want this in the openauto codebase.
+
+        // I need whoever is reading this to understand my sins.
+
+        // Raspberry Pi hardware h264 decode appears broken if video_signal_type VUI parameters are given in the h264 header
+        // And we don't have control over Android Auto putting these parameters in (which it does.. on some model phones)
+        // And editing this header on the fly would require me either writing an h264 parser (gross)
+        // or pulling one in as a library (gross) - Because h264 headers are dynamically sized based on what they contain,
+        // and the data isn't guaranteed to be aligned (so we can't just toss out a few bytes).
+
+        // So... just replace the whole first header with a known good one (which from my testing, appears
+        // identical to a "bad" one but without the video_signal_type VUI parameters)
+
+        // This is not a fix, I want to be very clear about that. I don't know what else I'm breaking, or run the 
+        // risk of breaking by doing this. This code should only remain here as long as the Pi Engineers haven't released
+        // a firmware/driver fix for this yet.
+
+        // Android Auto seems nice enough to always start a message with a new h264 packet,
+        // but that doesn't mean we don't have multiple within the message.
+        // So if we have a message that _could_ fit two packets (which are delimited by 0x00000001)
+        // then we try to find the second and save the data it contains, while replacing the first.
+        
+        // This header should also always be within the first video message we receive from a device... I think
+
+        // This sequence was taken from a Pixel 3A, and appears identical to the "bad" device I have on hand
+        // (a Samsung S21 Ultra) except for the previously stated settings
+        std::vector<uint8_t> good_header_data{ 0x00, 0x00, 0x00, 0x01, 0x67, 0x42, 0x80, 0x1f, 0xda, 0x03, 0x20, 0xf6, 0x80, 0x6d, 0x0a, 0x13, 0x50};
+        std::vector<uint8_t> delimit_sequence{0x00, 0x00, 0x00, 0x01};
+        std::vector<uint8_t> incoming_buffer(&buffer.cdata[0], &buffer.cdata[buffer.size]);
+        size_t incoming_buffer_size = buffer.size;
+        std::vector<uint8_t>::iterator sequence_split;
+
+        // First inject the good header
+        GstBuffer* buffer_ = gst_buffer_new_and_alloc(17);
+        gst_buffer_fill(buffer_, 0, good_header_data.data(), 17);
+        int ret = gst_app_src_push_buffer((GstAppSrc*)vidSrc_, buffer_);
+        if(ret != GST_FLOW_OK)
+        {
+            OPENAUTO_LOG(info) << "[GSTVideoOutput] Injecting good header failed";
+        }
+
+        // then check if there's data we need to save
+        if(incoming_buffer_size >= 8){
+            sequence_split = std::search(incoming_buffer.begin()+4, incoming_buffer.end(), delimit_sequence.begin(), delimit_sequence.end());
+            if(sequence_split != incoming_buffer.end()){
+                std::vector<uint8_t> incoming_data_saved(sequence_split, incoming_buffer.end());
+                GstBuffer* buffer_ = gst_buffer_new_and_alloc(incoming_data_saved.size());
+                gst_buffer_fill(buffer_, 0, incoming_data_saved.data(), incoming_data_saved.size());
+                int ret = gst_app_src_push_buffer((GstAppSrc*)vidSrc_, buffer_);
+                if(ret != GST_FLOW_OK)
+                {
+                    OPENAUTO_LOG(info) << "[GSTVideoOutput] Injecting partial header failed";
+                }
+            }
+        }
+        OPENAUTO_LOG(info) << "[GSTVideoOutput] Intercepted and replaced h264 header";
+
+        firstHeaderParsed=true;
+    }
+    else
+    {
+        GstBuffer* buffer_ = gst_buffer_new_and_alloc(buffer.size);
+        gst_buffer_fill(buffer_, 0, buffer.cdata, buffer.size);
+        int ret = gst_app_src_push_buffer((GstAppSrc*)vidSrc_, buffer_);
+        if(ret != GST_FLOW_OK)
+        {
+            OPENAUTO_LOG(info) << "[GSTVideoOutput] push buffer returned " << ret << " for " << buffer.size << "bytes";
+        }
     }
 }
 
 void GSTVideoOutput::onStartPlayback()
 {
+    firstHeaderParsed = false;
     if(activeCallback_ != nullptr)
     {
         activeCallback_(true);
@@ -215,6 +281,8 @@ void GSTVideoOutput::stop()
 
 void GSTVideoOutput::onStopPlayback()
 {
+    firstHeaderParsed = false;
+
     if(activeCallback_ != nullptr)
     {
         activeCallback_(false);
