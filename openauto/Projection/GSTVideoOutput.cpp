@@ -176,7 +176,7 @@ bool GSTVideoOutput::init()
 
 void GSTVideoOutput::write(uint64_t timestamp, const aasdk::common::DataConstBuffer& buffer)
 {
-    if(!firstHeaderParsed)
+    if(!firstHeaderParsed && this->configuration_->getTerribleH264Hack())
     {
         // I really really really hate this.
         // I don't want this in the openauto codebase.
