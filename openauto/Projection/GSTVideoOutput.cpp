@@ -20,7 +20,12 @@
 #include "aasdk/Common/Data.hpp"
 #include "openauto/Projection/GSTVideoOutput.hpp"
 #include "OpenautoLog.hpp"
+#include "h264_stream.h"
 #include <QTimer>
+#include <sstream>
+#include <string>
+#include <iostream>
+#include <iomanip>
 
 namespace openauto
 {
@@ -176,6 +181,7 @@ bool GSTVideoOutput::init()
 
 void GSTVideoOutput::write(uint64_t timestamp, const aasdk::common::DataConstBuffer& buffer)
 {
+    OPENAUTO_LOG(info)<<"[Raw Data] "<<dump(buffer);
     if(!firstHeaderParsed && this->configuration_->getTerribleH264Hack())
     {
         // I really really really hate this.
@@ -205,39 +211,55 @@ void GSTVideoOutput::write(uint64_t timestamp, const aasdk::common::DataConstBuf
 
         // This sequence was taken from a Pixel 3A, and appears identical to the "bad" device I have on hand
         // (a Samsung S21 Ultra) except for the previously stated settings
-        std::vector<uint8_t> good_header_data_480{0x00, 0x00, 0x00, 0x01, 0x67, 0x42, 0x80, 0x1f, 0xda, 0x03, 0x20, 0xf6, 0x80, 0x6d, 0x0a, 0x13, 0x50};
-        std::vector<uint8_t> good_header_data_720{0x00, 0x00, 0x00, 0x01, 0x67, 0x42, 0x80, 0x1F, 0xDA, 0x01, 0x40, 0x16, 0xE8, 0x06, 0xD0, 0xA1, 0x35};
-        std::vector<uint8_t> good_header_data_1080{0x00, 0x00, 0x00, 0x01, 0x67, 0x42, 0x80, 0x28, 0xDA, 0x01, 0xE0, 0x08, 0x9F, 0x96, 0x01, 0xB4, 0x28, 0x4D, 0x40};
-
+        
         std::vector<uint8_t> delimit_sequence{0x00, 0x00, 0x00, 0x01};
         std::vector<uint8_t> incoming_buffer(&buffer.cdata[0], &buffer.cdata[buffer.size]);
-        size_t incoming_buffer_size = buffer.size;
         std::vector<uint8_t>::iterator sequence_split;
-        std::vector<uint8_t> good_header_data;
 
-        switch(this->configuration_->getVideoResolution())
-        {
-            case(aasdk::proto::enums::VideoResolution::_480p):
-                good_header_data = good_header_data_480;
-                break;
-            case(aasdk::proto::enums::VideoResolution::_720p):
-                good_header_data = good_header_data_720;
-                break;
-            case(aasdk::proto::enums::VideoResolution::_1080p):
-                good_header_data = good_header_data_1080;
-                break;
+        int nal_start, nal_end;
+        uint8_t* buf = (uint8_t *) buffer.cdata;
+        int len = buffer.size;
+        // read some H264 data into buf
+        h264_stream_t* h = h264_new();
+        find_nal_unit(buf, len, &nal_start, &nal_end);
+        read_nal_unit(h, &buf[nal_start], nal_end - nal_start);
+        debug_nal(h,h->nal);
+        h->sps->vui.colour_description_present_flag = 0x00;
+        h->sps->vui.video_format = 0x00;
+        h->sps->vui.video_full_range_flag = 0x00;
+        h->sps->vui.colour_description_present_flag = 0x00;
+        h->sps->vui.colour_primaries = 0x00;
+        h->sps->vui.transfer_characteristics = 0x00;
+        h->sps->vui.matrix_coefficients = 0x00;
+
+        
+        uint8_t* out_buf = new uint8_t[30];
+
+        len = write_nal_unit(h, &out_buf[3], 30) + 3;
+        out_buf[0] = 0x00;
+        out_buf[1] = 0x00;
+        out_buf[2] = 0x00;
+        out_buf[3] = 0x01;
+
+        std::stringstream ss;
+        ss << std::hex << std::setfill('0');
+
+        for (int i = 0; i < len; i++) {
+            ss << " ";
+            ss << std::hex << std::setw(2) << static_cast<int>(out_buf[i]);
         }
-        // First inject the good header
-        GstBuffer* buffer_ = gst_buffer_new_and_alloc(good_header_data.size());
-        gst_buffer_fill(buffer_, 0, good_header_data.data(), good_header_data.size());
+        OPENAUTO_LOG(info) << "NEW HEADER "<<ss.str();
+
+        GstBuffer* buffer_ = gst_buffer_new_and_alloc(len);
+        gst_buffer_fill(buffer_, 0, out_buf, len);
         int ret = gst_app_src_push_buffer((GstAppSrc*)vidSrc_, buffer_);
         if(ret != GST_FLOW_OK)
         {
-            OPENAUTO_LOG(info) << "[GSTVideoOutput] Injecting good header failed";
+            OPENAUTO_LOG(info) << "[GSTVideoOutput] Injecting header failed";
         }
 
         // then check if there's data we need to save
-        if(incoming_buffer_size >= 8){
+        if(incoming_buffer.size() >= 8){
             sequence_split = std::search(incoming_buffer.begin()+4, incoming_buffer.end(), delimit_sequence.begin(), delimit_sequence.end());
             if(sequence_split != incoming_buffer.end()){
                 std::vector<uint8_t> incoming_data_saved(sequence_split, incoming_buffer.end());
