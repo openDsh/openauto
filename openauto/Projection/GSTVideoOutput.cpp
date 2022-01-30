@@ -182,13 +182,9 @@ bool GSTVideoOutput::init()
 
 void GSTVideoOutput::write(uint64_t timestamp, const aasdk::common::DataConstBuffer& buffer)
 {
-    OPENAUTO_LOG(info)<<"[Raw Data] "<<dump(buffer);
     if(!firstHeaderParsed && this->configuration_->getTerribleH264Hack())
     {
         // I really really really hate this.
-        // I don't want this in the openauto codebase.
-
-        // I need whoever is reading this to understand my sins.
 
         // Raspberry Pi hardware h264 decode appears broken if video_signal_type VUI parameters are given in the h264 header
         // And we don't have control over Android Auto putting these parameters in (which it does.. on some model phones)
@@ -196,12 +192,12 @@ void GSTVideoOutput::write(uint64_t timestamp, const aasdk::common::DataConstBuf
         
         // This is not a fix, I want to be very clear about that. I don't know what else I'm breaking, or run the 
         // risk of breaking by doing this. This code should only remain here as long as the Pi Engineers haven't released
-        // a firmware/driver fix for this yet.
+        // a firmware/driver fix for this yet. An issue has been opened upstream at https://github.com/raspberrypi/firmware/issues/1673
 
         // Android Auto seems nice enough to always start a message with a new h264 packet,
         // but that doesn't mean we don't have multiple within the message.
         // So if we have a message that _could_ fit two packets (which are delimited by 0x00000001)
-        // then we try to find the second and save the data it contains, while replacing the first.
+        // then we try to find the second and save the data it contains, while editing and replacing the first.
         
         // This header should also always be within the first video message we receive from a device... I think
         
@@ -215,10 +211,8 @@ void GSTVideoOutput::write(uint64_t timestamp, const aasdk::common::DataConstBuf
         h264_stream_t* h = h264_new();
         // finds the first NAL packet
         find_nal_unit(buf, len, &nal_start, &nal_end);
-        // prases it
+        // parses it
         read_nal_unit(h, &buf[nal_start], nal_end - nal_start);
-        // prints it
-        debug_nal(h,h->nal);
         // wipe all the color description stuff that breaks Pis
         h->sps->vui.video_signal_type_present_flag = 0x00;
         h->sps->vui.video_format = 0x00;
@@ -242,16 +236,6 @@ void GSTVideoOutput::write(uint64_t timestamp, const aasdk::common::DataConstBuf
         out_buf[1] = 0x00;
         out_buf[2] = 0x00;
         out_buf[3] = 0x01;
-
-        // just printing stuff so I can make sure this actually removes the bytes and doesn't just zero them
-        std::stringstream ss;
-        ss << std::hex << std::setfill('0');
-
-        for (int i = 0; i < len; i++) {
-            ss << " ";
-            ss << std::hex << std::setw(2) << static_cast<int>(out_buf[i]);
-        }
-        OPENAUTO_LOG(info) << "NEW HEADER "<<ss.str();
 
         // output to gstreamer
         GstBuffer* buffer_ = gst_buffer_new_and_alloc(len);
