@@ -35,7 +35,7 @@ const std::string Configuration::cVideoScreenDPIKey = "Video.ScreenDPI";
 const std::string Configuration::cVideoOMXLayerIndexKey = "Video.OMXLayerIndex";
 const std::string Configuration::cVideoMarginWidth = "Video.MarginWidth";
 const std::string Configuration::cVideoMarginHeight = "Video.MarginHeight";
-const std::string Configuration::cVideoTerribleH264Hack = "Video.TerribleH264Hack";
+const std::string Configuration::cVideoWhitescreenWorkaround = "Video.WhitesreenWorkaround";
 
 
 const std::string Configuration::cAudioMusicAudioChannelEnabled = "Audio.MusicAudioChannelEnabled";
@@ -95,7 +95,7 @@ void Configuration::load()
 
         omxLayerIndex_ = iniConfig.get<int32_t>(cVideoOMXLayerIndexKey, 1);
         videoMargins_ = QRect(0, 0, iniConfig.get<int32_t>(cVideoMarginWidth, 0), iniConfig.get<int32_t>(cVideoMarginHeight, 0));
-        terribleH264Hack_ = iniConfig.get<bool>(cVideoTerribleH264Hack, false);
+        whitescreenWorkaround_ = iniConfig.get<bool>(cVideoWhitescreenWorkaround, true);
 
         enableTouchscreen_ = iniConfig.get<bool>(cInputEnableTouchscreenKey, true);
         this->readButtonCodes(iniConfig);
@@ -133,7 +133,7 @@ void Configuration::reset()
     screenDPI_ = 140;
     omxLayerIndex_ = 1;
     videoMargins_ = QRect(0, 0, 0, 0);
-    terribleH264Hack_ = false;
+    whitescreenWorkaround_ = true;
     enableTouchscreen_ = true;
     buttonCodes_.clear();
     bluetoothAdapterType_ = BluetoothAdapterType::NONE;
@@ -155,7 +155,7 @@ void Configuration::save()
     iniConfig.put<int32_t>(cVideoOMXLayerIndexKey, omxLayerIndex_);
     iniConfig.put<uint32_t>(cVideoMarginWidth, videoMargins_.width());
     iniConfig.put<uint32_t>(cVideoMarginHeight, videoMargins_.height());
-    iniConfig.put<bool>(cVideoTerribleH264Hack, terribleH264Hack_);
+    iniConfig.put<bool>(cVideoWhitescreenWorkaround, whitescreenWorkaround_);
 
     iniConfig.put<bool>(cInputEnableTouchscreenKey, enableTouchscreen_);
     this->writeButtonCodes(iniConfig);
@@ -245,14 +245,14 @@ QRect Configuration::getVideoMargins() const
     return videoMargins_;
 }
 
-void Configuration::setTerribleH264Hack(bool value) 
+void Configuration::setWhitescreenWorkaround(bool value) 
 {
-    terribleH264Hack_ = value;
+    whitescreenWorkaround_ = value;
 }
 
-bool Configuration::getTerribleH264Hack() const
+bool Configuration::getWhitescreenWorkaround() const
 {
-    return terribleH264Hack_;
+    return whitescreenWorkaround_;
 }
 
 bool Configuration::getTouchscreenEnabled() const

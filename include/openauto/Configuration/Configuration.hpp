@@ -50,8 +50,8 @@ public:
     int32_t getOMXLayerIndex() const override;
     void setVideoMargins(QRect value) override;
     QRect getVideoMargins() const override;
-    void setTerribleH264Hack(bool value) override;
-    bool getTerribleH264Hack() const override;
+    void setWhitescreenWorkaround(bool value) override;
+    bool getWhitescreenWorkaround() const override;
 
     bool getTouchscreenEnabled() const override;
     void setTouchscreenEnabled(bool value) override;
@@ -93,7 +93,7 @@ private:
     size_t screenDPI_;
     int32_t omxLayerIndex_;
     QRect videoMargins_;
-    bool terribleH264Hack_;
+    bool whitescreenWorkaround_;
     bool enableTouchscreen_;
     ButtonCodes buttonCodes_;
     BluetoothAdapterType bluetoothAdapterType_;
@@ -118,7 +118,7 @@ private:
     static const std::string cVideoOMXLayerIndexKey;
     static const std::string cVideoMarginWidth;
     static const std::string cVideoMarginHeight;
-    static const std::string cVideoTerribleH264Hack;
+    static const std::string cVideoWhitescreenWorkaround;
 
     static const std::string cAudioMusicAudioChannelEnabled;
     static const std::string cAudioSpeechAudioChannelEnabled;

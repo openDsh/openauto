@@ -182,7 +182,7 @@ bool GSTVideoOutput::init()
 
 void GSTVideoOutput::write(uint64_t timestamp, const aasdk::common::DataConstBuffer& buffer)
 {
-    if(!firstHeaderParsed && this->configuration_->getTerribleH264Hack())
+    if(!firstHeaderParsed && this->configuration_->getWhitescreenWorkaround())
     {
         // I really really really hate this.
 
