@@ -82,7 +82,9 @@ ServiceList ServiceFactory::create(aasdk::messenger::IMessenger::Pointer messeng
 
     serviceList.emplace_back(this->createVideoService(messenger));
     serviceList.emplace_back(this->createBluetoothService(messenger));
-    serviceList.emplace_back(this->createNavigationStatusService(messenger));
+    std::shared_ptr<NavigationStatusService> navStatusService = this->createNavigationStatusService(messenger);
+    navStatusService_ = navStatusService;
+    serviceList.emplace_back(navStatusService);
     std::shared_ptr<MediaStatusService> mediaStatusService = this->createMediaStatusService(messenger);
     mediaStatusService_ = mediaStatusService;
     serviceList.emplace_back(mediaStatusService);
@@ -136,9 +138,9 @@ IService::Pointer ServiceFactory::createBluetoothService(aasdk::messenger::IMess
     return std::make_shared<BluetoothService>(ioService_, messenger, std::move(bluetoothDevice));
 }
 
-IService::Pointer ServiceFactory::createNavigationStatusService(aasdk::messenger::IMessenger::Pointer messenger)
+std::shared_ptr<NavigationStatusService> ServiceFactory::createNavigationStatusService(aasdk::messenger::IMessenger::Pointer messenger)
 {
-    return std::make_shared<NavigationStatusService>(ioService_, messenger);
+    return std::make_shared<NavigationStatusService>(ioService_, messenger, aa_interface_);
 }
 
 std::shared_ptr<MediaStatusService> ServiceFactory::createMediaStatusService(aasdk::messenger::IMessenger::Pointer messenger)
@@ -243,6 +245,10 @@ void ServiceFactory::setAndroidAutoInterface(IAndroidAutoInterface* aa_interface
     if(std::shared_ptr<MediaStatusService> mediaStatusService = mediaStatusService_.lock())
     {
         mediaStatusService->setAndroidAutoInterface(aa_interface);
+    }
+    if(std::shared_ptr<NavigationStatusService> navStatusService = navStatusService_.lock())
+    {
+        navStatusService->setAndroidAutoInterface(aa_interface);
     }
 
 }

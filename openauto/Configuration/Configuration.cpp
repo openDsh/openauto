@@ -35,6 +35,8 @@ const std::string Configuration::cVideoScreenDPIKey = "Video.ScreenDPI";
 const std::string Configuration::cVideoOMXLayerIndexKey = "Video.OMXLayerIndex";
 const std::string Configuration::cVideoMarginWidth = "Video.MarginWidth";
 const std::string Configuration::cVideoMarginHeight = "Video.MarginHeight";
+const std::string Configuration::cVideoWhitescreenWorkaround = "Video.WhitesreenWorkaround";
+
 
 const std::string Configuration::cAudioMusicAudioChannelEnabled = "Audio.MusicAudioChannelEnabled";
 const std::string Configuration::cAudioSpeechAudioChannelEnabled = "Audio.SpeechAudioChannelEnabled";
@@ -93,6 +95,7 @@ void Configuration::load()
 
         omxLayerIndex_ = iniConfig.get<int32_t>(cVideoOMXLayerIndexKey, 1);
         videoMargins_ = QRect(0, 0, iniConfig.get<int32_t>(cVideoMarginWidth, 0), iniConfig.get<int32_t>(cVideoMarginHeight, 0));
+        whitescreenWorkaround_ = iniConfig.get<bool>(cVideoWhitescreenWorkaround, true);
 
         enableTouchscreen_ = iniConfig.get<bool>(cInputEnableTouchscreenKey, true);
         this->readButtonCodes(iniConfig);
@@ -130,6 +133,7 @@ void Configuration::reset()
     screenDPI_ = 140;
     omxLayerIndex_ = 1;
     videoMargins_ = QRect(0, 0, 0, 0);
+    whitescreenWorkaround_ = true;
     enableTouchscreen_ = true;
     buttonCodes_.clear();
     bluetoothAdapterType_ = BluetoothAdapterType::NONE;
@@ -151,6 +155,7 @@ void Configuration::save()
     iniConfig.put<int32_t>(cVideoOMXLayerIndexKey, omxLayerIndex_);
     iniConfig.put<uint32_t>(cVideoMarginWidth, videoMargins_.width());
     iniConfig.put<uint32_t>(cVideoMarginHeight, videoMargins_.height());
+    iniConfig.put<bool>(cVideoWhitescreenWorkaround, whitescreenWorkaround_);
 
     iniConfig.put<bool>(cInputEnableTouchscreenKey, enableTouchscreen_);
     this->writeButtonCodes(iniConfig);
@@ -238,6 +243,16 @@ void Configuration::setVideoMargins(QRect value)
 QRect Configuration::getVideoMargins() const
 {
     return videoMargins_;
+}
+
+void Configuration::setWhitescreenWorkaround(bool value) 
+{
+    whitescreenWorkaround_ = value;
+}
+
+bool Configuration::getWhitescreenWorkaround() const
+{
+    return whitescreenWorkaround_;
 }
 
 bool Configuration::getTouchscreenEnabled() const

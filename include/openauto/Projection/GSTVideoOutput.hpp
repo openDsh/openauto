@@ -78,6 +78,8 @@ private:
     static GstPadProbeReturn convertProbe(GstPad* pad, GstPadProbeInfo* info, void*);
     static gboolean busCallback(GstBus*, GstMessage* message, gpointer*);
 
+    bool firstHeaderParsed = false;
+
     QGst::ElementPtr videoSink_;
     QQuickWidget* videoWidget_;
     GstElement* vidPipeline_;

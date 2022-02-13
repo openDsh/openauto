@@ -59,6 +59,8 @@ public:
     virtual int32_t getOMXLayerIndex() const = 0;
     virtual void setVideoMargins(QRect value) = 0;
     virtual QRect getVideoMargins() const = 0;
+    virtual void setWhitescreenWorkaround(bool value) = 0;
+    virtual bool getWhitescreenWorkaround() const = 0;
 
     virtual bool getTouchscreenEnabled() const = 0;
     virtual void setTouchscreenEnabled(bool value) = 0;
