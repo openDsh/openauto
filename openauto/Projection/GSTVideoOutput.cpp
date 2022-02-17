@@ -20,9 +20,6 @@
 #include "aasdk/Common/Data.hpp"
 #include "openauto/Projection/GSTVideoOutput.hpp"
 #include "OpenautoLog.hpp"
-<<<<<<< HEAD
-#include <QTimer>
-=======
 #include "h264_stream.h"
 #include <QTimer>
 // these are needed only for pretty printing of data, to be removed
@@ -30,7 +27,6 @@
 #include <string>
 #include <iostream>
 #include <iomanip>
->>>>>>> develop
 
 namespace openauto
 {
