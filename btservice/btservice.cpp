@@ -59,11 +59,11 @@ void btservice::connectToBluetooth(QBluetoothAddress addr, QBluetoothAddress con
     // pi mic/speakers for android auto phone calls. bluetoothctl will connect all profiles.
     
 #ifdef RPI
-    QString program = QString::fromStdString("sudo hcitool cc ")+addr.toString();
-    btConnectProcess = new QProcess();
-    OPENAUTO_LOG(info)<<"[btservice] Attempting to connect to last bluetooth device, "<<addr.toString().toStdString()<<" using hcitool/bluetoothctl hybrid";
-    btConnectProcess->start(program, QProcess::Unbuffered | QProcess::ReadWrite);
-    btConnectProcess->waitForFinished();
+//    QString program = QString::fromStdString("sudo hcitool cc ")+addr.toString();
+//    btConnectProcess = new QProcess();
+//    OPENAUTO_LOG(info)<<"[btservice] Attempting to connect to last bluetooth device, "<<addr.toString().toStdString()<<" using hcitool/bluetoothctl hybrid";
+//    btConnectProcess->start(program, QProcess::Unbuffered | QProcess::ReadWrite);
+//    btConnectProcess->waitForFinished();
 #endif
     btConnectProcess = new QProcess();
     btConnectProcess->setProcessChannelMode(QProcess::SeparateChannels);
