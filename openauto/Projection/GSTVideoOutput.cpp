@@ -51,11 +51,27 @@ GSTVideoOutput::GSTVideoOutput(configuration::IConfiguration::Pointer configurat
 
     GError* error = nullptr;
     const char* vidLaunchStr = "appsrc name=mysrc is-live=true block=false max-latency=100 do-timestamp=true stream-type=stream ! queue ! h264parse ! "
+        // ok let's go through this.
+        // We used to switch to a different pipeline for raspberry pi 4 because it has a different chip
+        // and the omx api is not available - the 'modern/correct' way to do decoding is to use v4l2
+        // but then with the release of bullseye, not only did the pi 3b start working with v4l2,
+        // but the omx api was removed/not supported.
+        
+        // so now we use the same decoder if on bullseye, but if not, a different decoder dependant on pi revision
+        
+        // and if not on a pi, yet another pipeline.
+
+        // This can be simplified down to one ifdef (diff pipeline for running on a pi or not) if we
+        // give up on supporting OS below bullseye.
         #ifdef RPI
-            #ifdef PI4
-                               "v4l2h264dec ! "
+            #ifndef BULLSEYE
+                #ifdef PI4
+                                "v4l2h264dec ! "
+                #else
+                                "omxh264dec ! "
+                #endif
             #else
-                               "omxh264dec ! "
+                "v4l2h264dec ! "
             #endif
         #else
                                "avdec_h264 ! "
@@ -63,10 +79,14 @@ GSTVideoOutput::GSTVideoOutput(configuration::IConfiguration::Pointer configurat
                                 "videocrop top=0 bottom=0 name=videocropper ! capsfilter caps=video/x-raw name=mycapsfilter";
     #ifdef RPI
         OPENAUTO_LOG(info) << "[GSTVideoOutput] RPI Build, running with " <<
-        #ifdef PI4
-                              "v4l2h264dec";
+        #ifndef BULLSEYE
+            #ifdef PI4
+                "v4l2h264dec"
+            #else
+                "omxh264dec"
+            #endif
         #else
-                              "omxh264dec";
+            "v4l2h264dec";
         #endif
     #endif
     
