@@ -33,7 +33,6 @@ namespace openauto
 namespace projection
 {
 
-
 GSTVideoOutput::GSTVideoOutput(configuration::IConfiguration::Pointer configuration, QWidget* videoContainer, std::function<void(bool)> activeCallback)
     : VideoOutput(std::move(configuration))
     , videoContainer_(videoContainer)
@@ -49,48 +48,13 @@ GSTVideoOutput::GSTVideoOutput(configuration::IConfiguration::Pointer configurat
 
     videoSink_ = surface_->videoSink();
 
-    GError* error = nullptr;
-    const char* vidLaunchStr = "appsrc name=mysrc is-live=true block=false max-latency=100 do-timestamp=true stream-type=stream ! queue ! h264parse ! "
-        // ok let's go through this.
-        // We used to switch to a different pipeline for raspberry pi 4 because it has a different chip
-        // and the omx api is not available - the 'modern/correct' way to do decoding is to use v4l2
-        // but then with the release of bullseye, not only did the pi 3b start working with v4l2,
-        // but the omx api was removed/not supported.
-        
-        // so now we use the same decoder if on bullseye, but if not, a different decoder dependant on pi revision
-        
-        // and if not on a pi, yet another pipeline.
 
-        // This can be simplified down to one ifdef (diff pipeline for running on a pi or not) if we
-        // give up on supporting OS below bullseye.
-        #ifdef RPI
-            #ifndef BULLSEYE
-                #ifdef PI4
-                                "v4l2h264dec ! "
-                #else
-                                "omxh264dec ! "
-                #endif
-            #else
-                "v4l2h264dec ! "
-            #endif
-        #else
-                               "avdec_h264 ! "
-        #endif
-                                "videocrop top=0 bottom=0 name=videocropper ! capsfilter caps=video/x-raw name=mycapsfilter";
-    #ifdef RPI
-        OPENAUTO_LOG(info) << "[GSTVideoOutput] RPI Build, running with " <<
-        #ifndef BULLSEYE
-            #ifdef PI4
-                "v4l2h264dec"
-            #else
-                "omxh264dec"
-            #endif
-        #else
-            "v4l2h264dec";
-        #endif
-    #endif
+    GError* error = nullptr;
+    std::string vidLaunchStr = "appsrc name=mysrc is-live=true block=false max-latency=100 do-timestamp=true stream-type=stream ! queue ! h264parse ! capssetter caps=\"video/x-h264,colorimetry=bt709\" ! ";
+    vidLaunchStr += ToPipeline(findPreferredVideoDecoder());
+    vidLaunchStr += " ! videocrop top=0 bottom=0 name=videocropper ! capsfilter caps=video/x-raw name=mycapsfilter";
     
-    vidPipeline_ = gst_parse_launch(vidLaunchStr, &error);
+    vidPipeline_ = gst_parse_launch(vidLaunchStr.c_str(), &error);
     GstBus* bus = gst_pipeline_get_bus(GST_PIPELINE(vidPipeline_));
     gst_bus_add_watch(bus, (GstBusFunc)&GSTVideoOutput::busCallback, this);
     gst_object_unref(bus);
@@ -119,11 +83,25 @@ GSTVideoOutput::~GSTVideoOutput()
     gst_object_unref(vidSrc_);
 }
 
-void GSTVideoOutput::dumpDot(){
-    
-    gst_debug_bin_to_dot_file(GST_BIN(vidPipeline_), GST_DEBUG_GRAPH_SHOW_VERBOSE, "pipeline");
-        OPENAUTO_LOG(info) << "[GSTVideoOutput] Dumped dot debug info";
 
+H264_Decoder GSTVideoOutput::findPreferredVideoDecoder()
+{
+    for (H264_Decoder decoder : H264_Decoder_Priority_List) {
+        GstElementFactory *decoder_factory = gst_element_factory_find (ToString(decoder));
+        if(decoder_factory != nullptr){
+            gst_object_unref(decoder_factory);
+            OPENAUTO_LOG(info) << "[GSTVideoOutput] Selecting the " << ToString(decoder) << " h264 decoder";
+            return decoder;
+        }
+    }
+    OPENAUTO_LOG(error) << "[GSTVideoOutput] Couldn't find a decoder to use!";
+    return H264_Decoder::unknown;
+}
+
+void GSTVideoOutput::dumpDot()
+{    
+    gst_debug_bin_to_dot_file(GST_BIN(vidPipeline_), GST_DEBUG_GRAPH_SHOW_VERBOSE, "pipeline");
+    OPENAUTO_LOG(info) << "[GSTVideoOutput] Dumped dot debug info";
 }
 
 gboolean GSTVideoOutput::busCallback(GstBus*, GstMessage* message, gpointer*)

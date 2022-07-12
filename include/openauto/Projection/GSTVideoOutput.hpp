@@ -51,6 +51,46 @@ namespace openauto
 namespace projection
 {
 
+// enum of possible h264 decoders dash will attempt to use
+enum H264_Decoder { 
+    nvcodec,
+    v4l2,
+    omx,
+    vaapi,
+    libav,
+    unknown
+};
+
+// order of priority for decoders - dash will use the first decoder it can find in this list
+// for sake of the code, don't include "unknown" as a decoder to search for - this is the default case.
+const H264_Decoder H264_Decoder_Priority_List[] = { nvcodec, v4l2, omx, libav };
+
+// A map of enum to actual pad name we want to use
+inline const char* ToString(H264_Decoder v)
+{
+    switch (v)
+    {
+        case nvcodec: return "nvh264dec";
+        case v4l2: return "v4l2h264dec";
+        case omx: return "omxh264dec";
+        case libav: return "avdec_h264";
+        default: return "unknown";
+    }
+}
+// A map of enum to pipeline steps to insert (because for some we need some video converting)
+inline const char* ToPipeline(H264_Decoder v)
+{
+    switch (v)
+    {
+        // we're going to assume that any machine with an nvidia card has a cpu powerful enough for video convert.
+        case nvcodec: return "nvh264dec ! videoconvert";
+        case v4l2: return "v4l2h264dec";
+        case omx: return "omxh264dec";
+        case libav: return "avdec_h264";
+        default: return "unknown";
+    }
+}
+
 class GSTVideoOutput: public QObject, public VideoOutput, boost::noncopyable
 {
     Q_OBJECT
@@ -77,6 +117,7 @@ public slots:
 private:
     static GstPadProbeReturn convertProbe(GstPad* pad, GstPadProbeInfo* info, void*);
     static gboolean busCallback(GstBus*, GstMessage* message, gpointer*);
+    H264_Decoder findPreferredVideoDecoder();
 
     bool firstHeaderParsed = false;
 

@@ -13,9 +13,3 @@ function( findRpiRevision OUTPUT )
 
     set( ${OUTPUT} "${TMP}" PARENT_SCOPE )
 endfunction()
-
-
-function ( findDebianVersion OUTPUT )
-    execute_process ( COMMAND echo /etc/debian_version OUTPUT_VARIABLE TMP OUTPUT_STRIP_TRAILING_WHITESPACE )
-    set( ${OUTPUT} "${TMP}" PARENT_SCOPE )
-endfunction()
