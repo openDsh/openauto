@@ -43,6 +43,11 @@ btservice::btservice(openauto::configuration::IConfiguration::Pointer config)
 
 void btservice::connectToBluetooth(QBluetoothAddress addr, QBluetoothAddress controller)
 {
+    // Update 07-12-22, with bluez update and krnbt, raspberry pi is behaving as expected. For this reason
+    // the RPI specific code has been commented out. The commented out code (and comments below this one) 
+    // exist as legacy now - in case there's a scenario where someone cannot update to krnbt or newer bluez.
+
+
     // The raspberry pi has a really tough time using bluetoothctl (or really anything) to connect to an Android phone
     // even though phone connecting to the pi is fine.
     // I found a workaround where you can make the pi attempt an rfcomm connection to the phone, and it connects immediately
