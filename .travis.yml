@@ -1,0 +1,18 @@
+dist: bionic
+language: c++
+script:
+    - sudo apt-get install libboost-all-dev libusb-1.0.0-dev libssl-dev cmake libprotobuf-dev protobuf-c-compiler protobuf-compiler libqt5multimedia5 libqt5multimedia5-plugins libqt5multimediawidgets5 qtmultimedia5-dev libqt5bluetooth5 libqt5bluetooth5-bin qtconnectivity5-dev pulseaudio librtaudio-dev
+    # aasdk is a prerequisite
+    - cd ..
+    - git clone https://github.com/OpenDsh/aasdk
+    - cd aasdk
+    - cmake -DCMAKE_BUILD_TYPE=Release .
+    - make -j2
+    - sudo make install
+    - cd ..
+
+    # Now build openauto
+    - mkdir openauto_build; cd openauto_build
+    - cmake -DCMAKE_BUILD_TYPE=Release -DRPI3_BUILD=TRUE -DAASDK_INCLUDE_DIRS="../aasdk/include" -DAASDK_LIBRARIES="../aasdk/lib/libaasdk.so" -DAASDK_PROTO_INCLUDE_DIRS="../aasdk" -DAASDK_PROTO_LIBRARIES="../aasdk/lib/libaasdk_proto.so" ../openauto
+    - make -j4
+    - sudo make install
