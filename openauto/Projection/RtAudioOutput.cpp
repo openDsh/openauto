@@ -55,7 +55,7 @@ bool RtAudioOutput::open()
             dac_->openStream(&parameters, nullptr, RTAUDIO_SINT16, sampleRate_, &bufferFrames, &RtAudioOutput::audioBufferReadHandler, static_cast<void*>(this), &streamOptions);
             return audioBuffer_.open(QIODevice::ReadWrite);
         }
-        catch
+        catch(...)
         {
             OPENAUTO_LOG(error) << "[RtAudioOutput] Failed to open audio output, what: " << "err";
         }
@@ -83,7 +83,7 @@ void RtAudioOutput::start()
         {
             dac_->startStream();
         }
-        catch
+        catch(...)
         {
             OPENAUTO_LOG(error) << "[RtAudioOutput] Failed to start audio output, what: " << "error";
         }
@@ -130,7 +130,7 @@ void RtAudioOutput::doSuspend()
         {
             dac_->stopStream();
         }
-        catch
+        catch(...)
         {
             OPENAUTO_LOG(error) << "[RtAudioOutput] Failed to suspend audio output, what: " << "error";
         }
